@@ -59,9 +59,10 @@ In order to start using Grow, you have to clone or download the project builder 
 
 
 ### Clone existing Grow project
+
 1. clone this repository using git clone https://bitbucket.org/navybits/start-new-project.git grow 
 2. cd grow
-3.  bash clone-existing-project -p <project-name> -c <customization-git-url>
+3. bash clone-existing-project -p <project-name> -c <customization-git-url>
 4. cd meteor-grow/<project-name>
 5. sh start.sh <port>
 6. Navigate to localhost:<port>
@@ -91,3 +92,108 @@ Inside this generic package, you will be able to:
 and much more 
 
 ... to be continued
+
+## Built-in listing component
+
+### How to use built-in list view?
+Use the component `ListDefaultView` provided by `ui-config-collector` core package.
+Specify your collection name in the props `collectionName`. In some cases, when you need to distinguish 2 different faces of the same collection, you can use `list` property. 
+This component handles, internally, the subscriptions and publications needed to get the collection data.
+But, it won't know what to display, unless you specify the columns you want to show about your records.
+To pass to that step, we need to fulfill the [pagination step](#pagination_step).
+`ListDefaultView` provides additional props as well.
+**List view additional options**:
+- `listTitle`: optional string to be displayed on top of the resultant list.
+- `defaultFilters`: optional object.
+- `sortByCriteria`: optional field name (defaults to `createdAt` field).
+- `sortByDirection`: optional "asc" or "desc" (defaults to "desc").
+
+### <a name="pagination_step">Lists pagination</a>
+One of the main configurations to move on with offered core features is what we call `pagination info`.
+This configuration mainly controls, as its name means, the info related to list pagination. It's an object that holds a **`limit`** (of type `number`: defaults to 25 records per page). It supports **`skip`** option as well (of type `number`: defaults to 0 skipped records from the queried data cursor).
+But the most affective option is **`fields`**.
+**`fields`** is an object used to filter the record's info. The object has the fields desired, as keys with value 1 . ([accordingly with grapher's query options](https://cult-of-coders.github.io/grapher/#Query-Options)).
+If **fields** is left empty, all schema fields will be returned.
+
+
+#### How to determine the columns content
+The list component needs to have an array of objects. Each object represents a column.
+You can manage the header of a column `label`, the info displayed in it through `fieldName`.
+Even you can manage a special resultant view, by replacing `fieldName` with a `render` function. The render function should always expect the record argument as a first param. It optionally receives a second argument which you can build, by adding `getColumnInfo` method in `ListDefaultView`. `getColumnInfo` takes **{row, column, dataToBeRouted}** as params. **row** is the record. **column** is the object you've configured. **dataToBeRouted** are relevant to pagination purposes.What you decide to return from this function will be the second entry param of `render`.
+The array you built will be passed to the ready method `addListColumns` (provided by `ui-config-collector` core package), along with `collectionName` in **name** key.
+
+```javascript
+import { Meteor } from 'meteor/meteor'
+import Collector from 'meteor/ui-config-collector'
+const { methods: { addListColumns } } = Collector
+if(Meteor.isClient){
+ import React from 'react'
+
+ const myColumns=[
+  {
+    label:'Column #1', fieldName:'fieldName1'
+  },
+  {
+    label:'Column #2', render: (record, info)=>(<span>....</span>)
+  }
+.....
+ ]
+}
+
+addListColumns({name: 'collectionName', columns: myColumns })
+```
+
+#### Make columns sortable
+Add to your column's definition and additional field `sortingPath` in which you will set the path of "to be sortable" info.
+
+<!-- 
+import React from 'react'
+import Collector from 'meteor/ui-config-collector'
+const {components: { ListDefaultView } } = Collector
+
+class MyClass extends React.Component {
+ render(){
+   return (
+     <div className="content">
+           <ListDefaultView collectionName="myCollectionName" 
+                            sortByCriteria="myFieldName"
+                            listTitle="My List Title"
+                            defaultFilters={{_id: {$eq: Meteor.userId()} }} /*direct form of a query*/
+            />
+     </div>)
+ }
+}
+1. It will hold a label that appears on top of the column.
+
+2. The fieldName of the value i want to show , or , a render function.  
+
+              (The render function accepts two parameters : 
+
+               First param: the whole record .
+
+               Second param: the return value of the function getColumnInfo (specified as a ListDefautView prop).
+
+In main.js , test Meteor.isClient before using addListColumns and returning any react element for any column.
+As for info, they're coming from your custom getColumnInfo function code . It's passed as a ListDefaultView prop in your custom component.
+
+It receives 2 params: row & column. 
+
+The row represents one record . The column is, at eachtime, one of the columns defined in main.js.
+
+ <ListDefaultView collectionName="myCollectionName" 
+                  sortByCriteria="myFieldName"
+                  listTitle="My List Title"
+
+                  getColumnInfo={ ({row,column})=> {....} }
+ /> -->
+
+... to be continued
+
+
+## Linking collections
+
+### How to build links between collections ?
+To define links, use `addLinks` method with your collection (As explained in [grapher documentation](https://cult-of-coders.github.io/grapher/#Linking-Collections)). 
+
+### How to save linked data in your record ?
+Use the method named `addGrapherLinks` provided by the core package `ui-config-collector` and give it the same link structure defined for grapher function, along with your collection name. This will created something similar to layer, upon building records, that will add to each record additional fields representing the links you already defined. The field has the name of its corresponding link and holds the data retreived from target collection.
