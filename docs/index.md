@@ -4,8 +4,8 @@ Table of Content
 
 - [Introduction](#intro)
 - [Getting started](#getting_started)
+- [Layout customization](#layout_customization)
 - [Add Custom Modules](#add_custom_modules)
-- [Skin](#)
 
 ## <a name="intro">Introduction </a>
 
@@ -49,7 +49,7 @@ Grow is a MERN stack framework, that's why you will have to handle working with 
 
 ---
 
-## <a name="getting_started">Getting Started </a>
+## <a name="getting_started">Getting Started</a>
 
 In order to start using Grow, you have to clone or download the project builder from [here](https://bitbucket.org/navybits/start-new-project.git) as indicated in the following section step 1
 
@@ -76,6 +76,140 @@ In order to start using Grow, you have to clone or download the project builder 
 Added modules and customizations code is under meteor-grow/<project-name>/customizations.
 The repository meteor-grow/<project-name>/core is the core framework (Grow Framework)
 
+---
+
+## <a name="layout_customization">Layout customization</a>
+
+### Title
+
+To change the document title, simply override it in `imports/custom/startup/client/config.js` like so.
+
+```javascript
+document.title = "Your title here";
+```
+
+### Logo
+
+Logo is the image appearing on the head of the screen on top of the collapsible sidebar.
+Inside `imports/custom/startup/client/config.js` as well, you need to export a constant named **CustomBranding**. This constant holds a react element (with `logo` className) which is destined to be your custom logo.
+It's preferred to have 2 images for this purpose, given 2 classNames respectively:
+
+1. `logo-mini`: displayed in responsive mode.
+2. `logo-lg`: used in full sized screens.
+   For best practices, the images used in your project can be put in `/custom-img` folder and called prefixed with `/img/custom-img`.
+
+```javascript
+import React from "react";
+const CustomBranding = (
+  <a href="#" className="logo">
+    <span className="logo-mini">
+      <img src="/img/custom-img/logo.png" height="30px" />
+    </span>
+    <span className="logo-lg">
+      <img
+        src="/img/custom-img/logo.png"
+        style={{ height: "40px", paddingBottom: "3px" }}
+      />
+    </span>
+  </a>
+);
+
+module.exports = { CustomBranding };
+```
+
+### Styles
+
+In `imports/custom/startup/client/skin.less` define your styling rules then wrap them with one class, as in the following example.
+
+```less
+@import "../../../../client/lib/base/lib/bootstrap/mixins.import.less";
+@import "../../../../client/lib/base/lib/bootstrap/variables.import.less";
+@import "../../../../client/lib/base/lib/admin-lte/variables.less";
+@import "../../../../client/lib/base/lib/admin-lte/mixins.less";
+@secondary: #053255;
+@main : #bd4334;
+@sidebar-dark-bg : #053255;
+.skin-custom {
+  //Navbar
+  .main-header {
+    .navbar {
+      .navbar-variant(@main; #fff);
+      .sidebar-toggle {
+        color: #fff;
+        &:hover {
+          background-color: darken(@secondary, 5%);
+        }
+      }
+      @media (max-width: @screen-header-collapse) {
+        .dropdown-menu {
+          li {
+            &.divider {
+              background-color: rgba(255, 255, 255, 0.1);
+            }
+            a {
+              color: #fff;
+              &:hover {
+                background: darken(@main, 5%);
+              }
+            }
+          }
+        }
+      }
+    } //Logo
+    .logo {
+      .logo-variant(darken(@main, 5%));
+    }
+    li.user-header {
+      background-color: @main;
+    }
+  } //Content Header
+  .content-header {
+    background: transparent;
+  } //Create the sidebar skin
+  .skin-dark-sidebar(@secondary);
+}
+```
+
+In `imports/custom/startup/client/config.js`, put the wrapper class name in the constant **CustomSkin**, then add it to the module exports.
+
+```javascript
+const CustomSkin = "my-custom-skin";
+module.exports = { CustomBranding, CustomSkin };
+```
+
+### Footer message
+
+In `imports/custom/startup/client/config.js` file, define the constant **CustomFooter** as a <footer> tag (with `main-footer` className) holding the message you want to show at the bottom of all pages. Then add it to the file exports.
+For example:
+```javascript
+import React from "react";
+import moment from "moment";
+const CustomFooter = (
+  <footer className="main-footer">
+    <div className="pull-right hidden-xs">
+      <b>Version</b> 1.0.0
+    </div>
+    <strong>
+      Copyright &copy; {moment().format("YYYY")} <a href="">Your title here</a>.
+    </strong> All rights reserved.
+  </footer>
+);
+module.exports = { CustomBranding, CustomSkin, CustomFooter };
+```
+
+<!-- TODO mainCss file -->
+<!-- TODO add this to menu documentation section
+How to customize the navigation menu title?
+In config.js, use menuHeaderText const to display your custom text .
+
+Use module.exports to make it reachable .
+
+const menuHeaderText="My custom menu title"
+
+module.exports={menuHeaderText}  -->
+
+## <!-- ____________________________________________________________________________________________ -->
+
 ## <a name="add_custom_modules">Adding Custom Modules</a>
 
 Extending the core features in Grow means adding new modules in the customization zone of your project (under `grow/meteor-grow/<project-name>/customizations`)
@@ -98,9 +232,9 @@ Inside this generic package, you will be able to:
 
 and much more
 
-So, your `custom-packageName` will be a copy of `generic-package`.
+So, your `custom-packageName` will be a copy of our `generic-package`.
 
-First, you need to ensure you have the right structure for your code to behave as expected.
+**First**, you need to ensure you maintain the right structure for your code to behave as expected.
 It's preferred to organize the package folders accordingly to their code's destination: common code (`both`), `server` code and `client` code.
 
 ![package structure](https://portal.navybits.org/web/image/1446/download.png?access_token=9dcac7f8-77dc-4224-83b7-eccc88726dd2)
@@ -111,7 +245,7 @@ For more precision, we used multiple files with different purposes in each folde
 
 ![package files](<https://portal.navybits.org/web/image/1447/download%20(1).png?access_token=fd2776ad-89a5-45dd-a437-a6f84ae77c5e>)
 
-Second, you can handle how you manage these files through `package.js`.
+**Second**, you can handle how you manage these files through `package.js`.
 
 ```javascript
 api.addFiles("lib/stylesheets/style.css");
@@ -124,7 +258,7 @@ api.addFiles("lib/server/index.js", ["server"]);
 api.mainModule("lib/client/main.js", "client");
 ```
 
-Finally, you need to add a dependency to your custom package from `custom-packages`.
+**Finally**, you need to add a dependency to your custom package from `custom-packages`.
 
 ```javascript
 Package.onUse(function(api) {
@@ -301,120 +435,3 @@ To define links, use `addLinks` method with your collection (As explained in [gr
 ### How to save linked data in your record ?
 
 Use the method named `addGrapherLinks` provided by the core package `ui-config-collector` and give it the same link structure defined for grapher function, along with your collection name. This will created something similar to layer, upon building records, that will add to each record additional fields representing the links you already defined. The field has the name of its corresponding link and holds the data retreived from target collection.
-
-<!-- __________________________________ -->
-
-<!-- `imports/custom/startup/client/config.js` holds
-
-```javascript
-document.title = "Your title here";
-```
-
-In `imports/custom/startup/client/skin.less` define your styling rules then wrap with one class.
-
-```less
-@import "../../../../client/lib/base/lib/bootstrap/mixins.import.less";
-@import "../../../../client/lib/base/lib/bootstrap/variables.import.less";
-@import "../../../../client/lib/base/lib/admin-lte/variables.less";
-@import "../../../../client/lib/base/lib/admin-lte/mixins.less";
-@secondary: #053255;
-@main : #bd4334;
-@sidebar-dark-bg : #053255;
-.skin-custom {
-  //Navbar
-  .main-header {
-    .navbar {
-      .navbar-variant(@main; #fff);
-      .sidebar-toggle {
-        color: #fff;
-        &:hover {
-          background-color: darken(@secondary, 5%);
-        }
-      }
-      @media (max-width: @screen-header-collapse) {
-        .dropdown-menu {
-          li {
-            &.divider {
-              background-color: rgba(255, 255, 255, 0.1);
-            }
-            a {
-              color: #fff;
-              &:hover {
-                background: darken(@main, 5%);
-              }
-            }
-          }
-        }
-      }
-    } //Logo
-    .logo {
-      .logo-variant(darken(@main, 5%));
-    }
-    li.user-header {
-      background-color: @main;
-    }
-  } //Content Header
-  .content-header {
-    background: transparent;
-  } //Create the sidebar skin
-  .skin-dark-sidebar(@secondary);
-}
-```
-
-In `config.js`, put the wrapper styling class name in the constant **CustomSkin**, then add it to the module exports.
-
-```javascript
-const CustomSkin = "my-custom-skin";
-module.exports = { CustomSkin };
-```
-To customize the logo, use an additional constant **CustomBranding**. 
-```javascript
-const CustomSkin = "my-custom-skin";
-const CustomBranding=<a href="#" className="logo">
-    <span className="logo-mini"><img src="/img/custom-img/logo.png" height="30px" /></span>
-    <span className="logo-lg"><img src="/img/custom-img/logo.png" style={{ height: "40px", paddingBottom: "3px" }} /></span>
-</a> -->
-
-module.exports = { CustomSkin, CustomBranding};
-```
-<!-- How to change DOM title?
-
-How to customize layout skin? -->
-
-<!-- TODO mainCss file -->
-<!-- 
-How to customize brand logo (in header)?
-Declare a const named CustomBranding and give the element you want to display. Use the className logo to give the right styling . Hence, this frameWork supports displaying a mini and a large logo according to the extension of the sidebar menu.
-
-Then use module.exports to export it .
-
-import React from 'react'
-
-const CustomBranding=<a href="#" className="logo">
-<span className="logo-mini">...</span>
-<span className="logo-lg">....</span>
-</a>
-
-module.exports={CustomBranding}
-
-How to customize the footer?
-Define the constant CustomFooter .
-
-Use a tag named footer with main-footer className, and give it the content you want to see as children (You can use responsive react code).
-
-Export your const.
-
-import React from 'react'
-
-const CustomFooter=<footer className="main-footer">...</footer>
-
-module.exports={CustomFooter}
-
-How to customize the navigation menu title?
-In config.js, use menuHeaderText const to display your custom text .
-
-Use module.exports to make it reachable .
-
-const menuHeaderText="My custom menu title"
-
-module.exports={menuHeaderText} -->
