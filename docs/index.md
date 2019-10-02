@@ -249,7 +249,7 @@ addListColumns({name: 'collectionName', columns: myColumns })
 
 Add to your column's definition and additional field `sortingPath` in which you will set the path of "to be sortable" info.
 
-<!--
+```
 import React from 'react'
 import Collector from 'meteor/ui-config-collector'
 const {components: { ListDefaultView } } = Collector
@@ -259,9 +259,9 @@ class MyClass extends React.Component {
    return (
      <div className="content">
            <ListDefaultView collectionName="myCollectionName"
-                            sortByCriteria="myFieldName"
-                            listTitle="My List Title"
-                            defaultFilters={{_id: {$eq: Meteor.userId()} }} /*direct form of a query*/
+                sortByCriteria="myFieldName"
+                listTitle="My List Title"
+                defaultFilters={{_id: {$eq: Meteor.userId()} }} /*direct form of a query*/
             />
      </div>)
  }
@@ -283,12 +283,13 @@ It receives 2 params: row & column.
 
 The row represents one record . The column is, at eachtime, one of the columns defined in main.js.
 
- <ListDefaultView collectionName="myCollectionName"
+                <ListDefaultView collectionName="myCollectionName"
                   sortByCriteria="myFieldName"
                   listTitle="My List Title"
 
                   getColumnInfo={ ({row,column})=> {....} }
- /> -->
+                 />
+ ```
 
 ... to be continued
 
