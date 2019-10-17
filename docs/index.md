@@ -84,7 +84,7 @@ The repository meteor-grow/<project-name>/core is the core framework (Grow Frame
 
 ### Title
 
-To change the document title, simply override it in `imports/custom/startup/client/config.js` like so.
+To change the document title, simply override it in `custom/startup/client/config.js` like so.
 
 ```javascript
 document.title = "Your title goes here";
@@ -93,7 +93,7 @@ document.title = "Your title goes here";
 ### Logo
 
 Logo is the image appearing in the header, on top of the collapsible sidebar.
-Inside `imports/custom/startup/client/config.js` as well, you need to declare a constant named **CustomBranding**, and export it holding a react element (with `logo` className) destined to be your custom logo.
+Inside `custom/startup/client/config.js` as well, you need to declare a constant named **CustomBranding**, and export it holding a react element (with `logo` className) destined to be your custom logo.
 It's preferred to have 2 images for this purpose, given 2 classNames respectively:
 
 1. `logo-mini`: displayed in responsive mode.
@@ -121,7 +121,7 @@ module.exports = { CustomBranding };
 
 ### Styles
 
-In `imports/custom/startup/client/skin.less` define your styling rules then wrap them with one main class, as in the following example.
+In `custom/startup/client/skin.less` define your styling rules then wrap them with one main class, as in the following example.
 
 ```less
 @import "../../../../client/lib/base/lib/bootstrap/mixins.import.less";
@@ -172,14 +172,14 @@ In `imports/custom/startup/client/skin.less` define your styling rules then wrap
 }
 ```
 
-In `imports/custom/startup/client/config.js`, put the wrapper class name in the constant **CustomSkin**, then add it to the module exports.
+In `custom/startup/client/config.js`, put the wrapper class name in the constant **CustomSkin**, then add it to the module exports.
 
 ```javascript
 const CustomSkin = "my-custom-skin";
 module.exports = { CustomBranding, CustomSkin };
 ```
 
-However, declaring global variables to use in your custom module's `styles.css` files won't be possible through our `skin.less` file. So the best approach is to create your custom file (for example: `imports/custom/startup/client/mainCss.css`) and import it in `imports/custom/startup/client/index.js`.
+However, declaring global variables to use in your custom module's `styles.css` files won't be possible through our `skin.less` file. So the best approach is to create your custom file (for example: `custom/startup/client/mainCss.css`) and import it in `custom/startup/client/index.js`.
 
 ```javascript
 import "./mainCss.css";
@@ -187,7 +187,7 @@ import "./mainCss.css";
 
 ### Footer message
 
-In `imports/custom/startup/client/config.js` file, the constant **CustomFooter** is a <footer> tag (with `main-footer` className) holding the message to be shown at the bottom of all pages (usually holds branding and copy rights). This constant would be accessible through the file exports.
+In `custom/startup/client/config.js` file, the constant **CustomFooter** is a <footer> tag (with `main-footer` className) holding the message to be shown at the bottom of all pages (usually holds branding and copy rights). This constant would be accessible through the file exports.
 As follows:
 
 ```javascript
@@ -204,6 +204,15 @@ const CustomFooter = (
   </footer>
 );
 module.exports = { CustomBranding, CustomSkin, CustomFooter };
+```
+
+### Profile menu customization
+
+To override header's profile menu, you'll need to use this file `custom/ui/pages/userBodySubList.jsx` and customize the returned component containing list item(s) having for class **"user-body"**
+The wrapper element of the returned component would be :
+
+```javascript
+<li className="user-body">...</li>
 ```
 
 ## <a name="add_custom_modules">Adding Custom Modules</a>
@@ -282,20 +291,27 @@ import SimpleSchema from 'simpl-schema'
 const SchemaName = new SimpleSchema({......});
 export default SchemaName;
 ```
+
 In `lib/both/collection.js` , create your mongo collection using your defined schema as follows:
+
 ```javascript
-import { Mongo } from 'mteor/mongo'
-import SchemaName from './schema.js'
-var  CollectionName = new Mongo.Collection('collectionName')
-CollectionName.attachSchema(SchemaName)
+import { Mongo } from "mteor/mongo";
+import SchemaName from "./schema.js";
+var CollectionName = new Mongo.Collection("collectionName");
+CollectionName.attachSchema(SchemaName);
 export default CollectionName;
 ```
+
 Then import it in `lib/both/main.js`.
+
 ```javascript
-import './collection'
+import "./collection";
 ```
+
 <!-- TODO elaborte on attach schema -->
+
 This is to organize and centralize collection declaration code, and to maintain an easy way to reference and change collection's schema.
+
 <!-- Why adding another schema for my collection?
 The adjusted schema is used in Query Box and Form generator .
 
@@ -352,6 +368,7 @@ Make sure you add a dependancy on "ui-config-collector" (core package) to use th
 
 <!-- ## <a name="add_custom_modules"></a> -->
 <!-- TODO elaborate on fields of type object + if not exist query box will take all original schema fields -->
+
 Why adding another schema for my collection?
 The adjusted schema is used in Query Box and Form generator .
 Depending on a custom schema, gives me the ability to indirectly control dynamic components, which depend on collection's schema.
@@ -551,6 +568,7 @@ addPaginationInfo({ name:"posts" , info: { limit: 5, preventLimitEdit:true,
                                          }
                   })
 ```
+
 As for data resultant from grapher links, it can be found in an object field holding the correspondante link name. This is, for sure, after apssing through [Linking collections](#linking_collections) step.
 So in fields you can choose the fields you want to get from the target linked collection, as follows:
 
@@ -605,7 +623,7 @@ addPrintSchema({
 
 The object structure used in the `schema` field above is following the pdfmake documentation. For more info about how to customize the pdf report you want to build, visit [pdfmake playground](https://pdfmake.github.io/docs/document-definition-object/)
 
-<!--TODO Make sure you add a dependancy on `ui-config-collector" (core package) to use this method -->
+<!--TODO Make sure you add a dependancy on `ui-config-collector" (core package) to use this method in package.js file -->
 
 ## <a name="linking_collections">Linking collections</a>
 
@@ -619,7 +637,7 @@ const links = {
   postOwner: { //custom link name
     type: "one", //either "one" or "many"
     collection: Meteor.users, //collection instance
-    field: "createdBy" //field in "posts" collection holding the _id of a record from "users" collection 
+    field: "createdBy" //field in "posts" collection holding the _id of a record from "users" collection
   },
   .....
 };
