@@ -6,6 +6,8 @@ Table of Content
 - [Getting started](#getting_started)
 - [Layout customization](#layout_customization)
 - [Add Custom Modules](#add_custom_modules)
+- [Built-in list view](#list_view_feature)
+- [Collections links](#linking_collections)
 
 ## <a name="intro">Introduction </a>
 
@@ -85,13 +87,13 @@ The repository meteor-grow/<project-name>/core is the core framework (Grow Frame
 To change the document title, simply override it in `imports/custom/startup/client/config.js` like so.
 
 ```javascript
-document.title = "Your title here";
+document.title = "Your title goes here";
 ```
 
 ### Logo
 
-Logo is the image appearing on the head of the screen on top of the collapsible sidebar.
-Inside `imports/custom/startup/client/config.js` as well, you need to export a constant named **CustomBranding**. This constant holds a react element (with `logo` className) which is destined to be your custom logo.
+Logo is the image appearing in the header, on top of the collapsible sidebar.
+Inside `imports/custom/startup/client/config.js` as well, you need to declare a constant named **CustomBranding**, and export it holding a react element (with `logo` className) destined to be your custom logo.
 It's preferred to have 2 images for this purpose, given 2 classNames respectively:
 
 1. `logo-mini`: displayed in responsive mode.
@@ -119,7 +121,7 @@ module.exports = { CustomBranding };
 
 ### Styles
 
-In `imports/custom/startup/client/skin.less` define your styling rules then wrap them with one class, as in the following example.
+In `imports/custom/startup/client/skin.less` define your styling rules then wrap them with one main class, as in the following example.
 
 ```less
 @import "../../../../client/lib/base/lib/bootstrap/mixins.import.less";
@@ -177,10 +179,17 @@ const CustomSkin = "my-custom-skin";
 module.exports = { CustomBranding, CustomSkin };
 ```
 
+However, declaring global variables to use in your custom module's `styles.css` files won't be possible through our `skin.less` file. So the best approach is to create your custom file (for example: `imports/custom/startup/client/mainCss.css`) and import it in `imports/custom/startup/client/index.js`.
+
+```javascript
+import "./mainCss.css";
+```
+
 ### Footer message
 
-In `imports/custom/startup/client/config.js` file, define the constant **CustomFooter** as a <footer> tag (with `main-footer` className) holding the message you want to show at the bottom of all pages. Then add it to the file exports.
-For example:
+In `imports/custom/startup/client/config.js` file, the constant **CustomFooter** is a <footer> tag (with `main-footer` className) holding the message to be shown at the bottom of all pages (usually holds branding and copy rights). This constant would be accessible through the file exports.
+As follows:
+
 ```javascript
 import React from "react";
 import moment from "moment";
@@ -190,32 +199,19 @@ const CustomFooter = (
       <b>Version</b> 1.0.0
     </div>
     <strong>
-      Copyright &copy; {moment().format("YYYY")} <a href="">Your title here</a>.
+      Copyright &copy; {moment().format("YYYY")} <a href="">My brand name</a>.
     </strong> All rights reserved.
   </footer>
 );
 module.exports = { CustomBranding, CustomSkin, CustomFooter };
 ```
 
-<!-- TODO mainCss file -->
-<!-- TODO add this to menu documentation section
-How to customize the navigation menu title?
-In config.js, use menuHeaderText const to display your custom text .
-
-Use module.exports to make it reachable .
-
-const menuHeaderText="My custom menu title"
-
-module.exports={menuHeaderText}  -->
-
-## <!-- ____________________________________________________________________________________________ -->
-
 ## <a name="add_custom_modules">Adding Custom Modules</a>
 
 Extending the core features in Grow means adding new modules in the customization zone of your project (under `grow/meteor-grow/<project-name>/customizations`)
 
-Let's say you want to add a new feature to your project, for example: Blog posts management. How to start?
-
+Let's say you want to add a new feature to your project, for example: Blog posts management..
+How to start?
 Well, don't be afraid! We already prepared a generic sample module for you. Take a copy of the folder `grow/generic_package` and paste it in your customizations directory `grow/meteor-grow/<project-name>/customizations`. This generic package is a bare module for Grow, once you add it, few steps to go, and you're there!
 
 Inside this generic package, you will be able to:
@@ -234,16 +230,17 @@ and much more
 
 So, your `custom-packageName` will be a copy of our `generic-package`.
 
-**First**, you need to ensure you maintain the right structure for your code to behave as expected.
+**First**, you need to ensure you maintain the right files structure, for your code to behave as expected.
 It's preferred to organize the package folders accordingly to their code's destination: common code (`both`), `server` code and `client` code.
 
 ![package structure](https://portal.navybits.org/web/image/1446/download.png?access_token=9dcac7f8-77dc-4224-83b7-eccc88726dd2)
 
 For more precision, we used multiple files with different purposes in each folder.
 
-<!-- TODO elaborate on files -->
+![package files](https://portal.navybits.org/web/image/1462/Screenshot%20from%202019-10-16%2016-25-12.png?access_token=03f6f6e7-4b95-443f-81bf-b89822f8c3e5)
 
-![package files](<https://portal.navybits.org/web/image/1447/download%20(1).png?access_token=fd2776ad-89a5-45dd-a437-a6f84ae77c5e>)
+<!-- https://portal.navybits.org/web/image/1461/Screenshot%20from%202019-10-16%2016-21-36.png?access_token=8a1e919f-7765-4cf9-9e72-1d2e9b4b8e46 -->
+<!-- TODO elaborate on files -->
 
 **Second**, you can handle how you manage these files through `package.js`.
 
@@ -264,7 +261,7 @@ api.mainModule("lib/client/main.js", "client");
 Package.onUse(function(api) {
   let packages = [
     // ...
-    "<your-custom-package-name>"
+    "<your-custom-package-name>" //ex: "posts-package"
     // ...
   ];
   // grant this package access to other packages symbols
@@ -274,6 +271,31 @@ Package.onUse(function(api) {
 });
 ```
 
+## Collection creation
+
+"both" holds all files related to the collection and its schema
+
+Add the file `lib/both/schema.js` . Declare and initialize your schema using [`simpl-schema`](https://www.npmjs.com/package/simpl-schema) npm.
+
+```javascript
+import SimpleSchema from 'simpl-schema'
+const SchemaName = new SimpleSchema({......});
+export default SchemaName;
+```
+In `lib/both/collection.js` , create your mongo collection using your defined schema as follows:
+```javascript
+import { Mongo } from 'mteor/mongo'
+import SchemaName from './schema.js'
+var  CollectionName = new Mongo.Collection('collectionName')
+CollectionName.attachSchema(SchemaName)
+export default CollectionName;
+```
+Then import it in `lib/both/main.js`.
+```javascript
+import './collection'
+```
+<!-- TODO elaborte on attach schema -->
+This is to organize and centralize collection declaration code, and to maintain an easy way to reference and change collection's schema.
 <!-- Why adding another schema for my collection?
 The adjusted schema is used in Query Box and Form generator .
 
@@ -326,7 +348,56 @@ Make sure you add a dependancy on "ui-config-collector" (core package) to use th
 
  -->
 
-## Built-in listing component
+## Adjusted schema
+
+<!-- ## <a name="add_custom_modules"></a> -->
+<!-- TODO elaborate on fields of type object + if not exist query box will take all original schema fields -->
+Why adding another schema for my collection?
+The adjusted schema is used in Query Box and Form generator .
+Depending on a custom schema, gives me the ability to indirectly control dynamic components, which depend on collection's schema.
+In addition, optimized schema lets me add extra informations, especially, when having relational links to be put in a form generator.
+
+<!-- TODO what is it like / how to write it -->
+
+How to add the side schema ?
+In `lib/both/main.js`, use the method `addSchema` provided by `ui-config-collector`, specify the name of your collection ("posts") and give it the customized schema object.
+Just like simpl-schema, the keys of nested objects are the fields of the collection. Each can hold : type (String, Number, Boolean, Object...), an array of allowedValues , a label field.
+As for foreign keys and fields coming from other collections , extra info are needed:
+
+- isLink (of value `true`)
+- linkName (as it's defined in grapher links)
+- linkedField
+- linkedCollection
+
+```javascript
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { addSchema }
+} = Collector;
+
+const myAdjustedSchema = {
+  fieldNameA1: {
+    type: String,
+    label: "My first field"
+  },
+  fieldNameA2: {
+    type: Number,
+    allowedValues: [1, 2, 3]
+  },
+  fieldNameAB: {
+    type: String,
+    label: "Field related to collection B",
+    isLink: true,
+    linkedCollection: "collectionB",
+    linkedField: "fieldNameB1" /* the field needed from the collection B*/,
+    linkName: "link-A-B"
+  }
+};
+
+addSchema({ name: "collectionA", schema: myAdjustedSchema });
+```
+
+## <a name="list_view_feature">Built-in listing component</a>
 
 ### How to use built-in list view?
 
@@ -338,24 +409,64 @@ To pass to that step, we need to fulfill the [pagination step](#pagination_step)
 `ListDefaultView` provides additional props as well.
 **List view additional options**:
 
+<!-- list/collectionList -->
+
 - `listTitle`: optional string to be displayed on top of the resultant list.
-- `defaultFilters`: optional object.
+- `defaultFilters`: optional query object.
 - `sortByCriteria`: optional field name (defaults to `createdAt` field).
 - `sortByDirection`: optional "asc" or "desc" (defaults to "desc").
 
-### <a name="pagination_step">Lists pagination</a>
+<!--TODO example to be reviewed
+// list={`${type}`}
+//  allowSelection={true}
+// useQueryBox={true}
+// hideGroups={true}
+-->
 
-One of the main configurations to move on with offered core features is what we call `pagination info`.
-This configuration mainly controls, as its name means, the info related to list pagination. It's an object that holds a **`limit`** (of type `number`: defaults to 25 records per page). It supports **`skip`** option as well (of type `number`: defaults to 0 skipped records from the queried data cursor).
-But the most affective option is **`fields`**.
-**`fields`** is an object used to filter the record's info. The object has the fields desired, as keys with value 1 . ([accordingly with grapher's query options](https://cult-of-coders.github.io/grapher/#Query-Options)).
-If **fields** is left empty, all schema fields will be returned.
+```javascript
+import React from "react";
+import Collector from "meteor/ui-config-collector";
+const {
+  components: { ListDefaultView }
+} = Collector;
 
-#### How to determine the columns content
+class CollectionList extends React.Component {
+  render() {
+    let { type } = this.props;
+    return (
+      <div className="content">
+        <ListDefaultView
+          collectionName="posts"
+          sortByCriteria="type"
+          listTitle="My List Title"
+          defaultFilters={{
+            type: { $eq: type }
+          }} /*direct form of a query*/
+          getColumnInfo={({ row, column, dataToBeRouted }) => {
+            return row && row.type;
+          }}
+        />
+      </div>
+    );
+  }
+}
+export default withTracker(props => {
+  let type = getNested(props, "match", "params", "type");
+  return {
+    currentUser: Meteor.user(),
+    type
+  };
+})(CollectionList);
+```
+
+This list view includes by default the pagination feature. To disable it, use `hidePagination` prop with **true** value.
+In case you want your list paginated but you need to prevent the user from changing the `limit` of records per page, review [Lists pagination](#lists_pagination)
+
+### How to determine the columns content ?
 
 The list component needs to have an array of objects. Each object represents a column.
-You can manage the header of a column `label`, the info displayed in it through `fieldName`.
-Even you can manage a special resultant view, by replacing `fieldName` with a `render` function. The render function should always expect the record argument as a first param. It optionally receives a second argument which you can build, by adding `getColumnInfo` method in `ListDefaultView`. `getColumnInfo` takes **{row, column, dataToBeRouted}** as params. **row** is the record. **column** is the object you've configured. **dataToBeRouted** are relevant to pagination purposes.What you decide to return from this function will be the second entry param of `render`.
+You can manage the header of a column `label`, and the info displayed in it through `fieldName`.
+Even you can manage a special resultant view, by replacing `fieldName` with a **`render`** function. The render function should always expect the record argument as a first param. It optionally receives a second argument which you can build, by adding `getColumnInfo` method in `ListDefaultView`. `getColumnInfo` takes **{row, column, dataToBeRouted}** as params. **row** is the record. **column** is the object you've configured. **dataToBeRouted** are relevant to pagination purposes. What you decide to return from this function will be the second entry param of **`render`** ("info" in the example).
 The array you built will be passed to the ready method `addListColumns` (provided by `ui-config-collector` core package), along with `collectionName` in **name** key.
 
 ```javascript
@@ -379,59 +490,139 @@ if(Meteor.isClient){
 addListColumns({name: 'collectionName', columns: myColumns })
 ```
 
-#### Make columns sortable
+### Make columns sortable
 
-Add to your column's definition and additional field `sortingPath` in which you will set the path of "to be sortable" info.
+After declaring the columns array, adding to a column's definition an additional field `sortingPath` will make sortable. `sortingPath` is the path of the record's info you to sort by.
+Your code will look something like this:
 
-<!--
-import React from 'react'
+```javascript
+import { Meteor } from 'meteor/meteor'
 import Collector from 'meteor/ui-config-collector'
-const {components: { ListDefaultView } } = Collector
+const { methods: { addListColumns } } = Collector
+if(Meteor.isClient){
+ import React from 'react'
 
-class MyClass extends React.Component {
- render(){
-   return (
-     <div className="content">
-           <ListDefaultView collectionName="myCollectionName"
-                            sortByCriteria="myFieldName"
-                            listTitle="My List Title"
-                            defaultFilters={{_id: {$eq: Meteor.userId()} }} /*direct form of a query*/
-            />
-     </div>)
- }
+ const myColumns=[
+  {
+    label:'Titles', fieldName:'title', sortingPath:'title'
+  },
+  {
+    label:'Owner', render: (record, info)=>(<span>....</span>), sortingPath:'createdByUser.name'
+  }
+.....
+ ]
 }
-1. It will hold a label that appears on top of the column.
 
-2. The fieldName of the value i want to show , or , a render function.
+addListColumns({name: 'posts', columns: myColumns })
+```
 
-              (The render function accepts two parameters :
+### <a name="lists_pagination">Lists pagination</a>
 
-               First param: the whole record .
+One of the main configurations to move on with offered core features is what we call **pagination info**.
+This configuration mainly controls the info related to list pagination. It's an object that holds a **`limit`** (of type `number`: defaults to 25 records per page). It supports **`skip`** option as well (of type `number`: defaults to 0 skipped records from the queried data cursor).But the most affective option is **`fields`**.
+**`fields`** is an object used to filter the record's info. The object has the fields desired, as keys with value 1 . ([accordingly with grapher's query options](https://cult-of-coders.github.io/grapher/#Query-Options)).
+If **fields** is left empty, all schema fields will be returned.
+`lib/both/main.js` will hold the following:
 
-               Second param: the return value of the function getColumnInfo (specified as a ListDefautView prop).
+```javascript
+import Collector from 'meteor/ui-config-collector'
+const {methods: { addPaginationInfo }}=Collector
 
-In main.js , test Meteor.isClient before using addListColumns and returning any react element for any column.
-As for info, they're coming from your custom getColumnInfo function code . It's passed as a ListDefaultView prop in your custom component.
+addPaginationInfo({ name:"posts" , info: { limit: 5,
+                                           skip:1,
+                                           fields:{
+                                             title:1,
+                                              ....}
+                                          }
+                  })
+```
 
-It receives 2 params: row & column.
+To disable the capability of limit selection change add the previous object the property `preventLimitEdit` and set it to true. Your code will become:
 
-The row represents one record . The column is, at eachtime, one of the columns defined in main.js.
+```javascript
+import Collector from 'meteor/ui-config-collector'
+const {methods:{addPaginationInfo}}=Collector
 
- <ListDefaultView collectionName="myCollectionName"
-                  sortByCriteria="myFieldName"
-                  listTitle="My List Title"
+addPaginationInfo({ name:"posts" , info: { limit: 5, preventLimitEdit:true,
+                                           skip:1,
+                                           fields:{
+                                             title:1,
+                                             ....}
+                                         }
+                  })
+```
+As for data resultant from grapher links, it can be found in an object field holding the correspondante link name. This is, for sure, after apssing through [Linking collections](#linking_collections) step.
+So in fields you can choose the fields you want to get from the target linked collection, as follows:
 
-                  getColumnInfo={ ({row,column})=> {....} }
- /> -->
+```javascript
+import Collector from 'meteor/ui-config-collector'
+const {methods:{addPaginationInfo}}=Collector
 
-... to be continued
+addPaginationInfo({ name:"posts" , info: { limit: 5, preventLimitEdit:true,
+                                           skip:1,
+                                           fields:{
+                                             title:1,
+                                             postOwner:{
+                                               name:1,
+                                               email:1,
+                                               ...
+                                             }
+                                             ....}
+                                         }
+                  })
+```
 
-## Linking collections
+### Print as pdf
 
-### How to build links between collections ?
+If you want to add ability to print data to pdf from list view, you have to configure a print schema
+In `lib/both/main.js`, use the method `addPrintSchema` defined in `ui-config-collector`, specify the name of your collection and give it your needed schema object.
+If a collection called `providers` has the data model { en: {name, description } }, we have to set the print schema like the following
 
-To define links, use `addLinks` method with your collection (As explained in [grapher documentation](https://cult-of-coders.github.io/grapher/#Linking-Collections)).
+```javascript
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { addPrintSchema }
+} = Collector;
+addPrintSchema({
+  name: "providers",
+  schema: {
+    content: [
+      // if you don't need styles, you can use a simple string to define a paragraph
+      "This sentence will be replaced by the provider name",
 
-### How to save linked data in your record ?
+      // using a { text: '...' } object lets you set styling properties
+      { text: "This paragraph will not be affected", fontSize: 15 }
+    ]
+  },
+  substitutions: [
+    {
+      position: "0",
+      substitution_field: "en.name"
+    }
+  ]
+});
+```
 
-Use the method named `addGrapherLinks` provided by the core package `ui-config-collector` and give it the same link structure defined for grapher function, along with your collection name. This will created something similar to layer, upon building records, that will add to each record additional fields representing the links you already defined. The field has the name of its corresponding link and holds the data retreived from target collection.
+The object structure used in the `schema` field above is following the pdfmake documentation. For more info about how to customize the pdf report you want to build, visit [pdfmake playground](https://pdfmake.github.io/docs/document-definition-object/)
+
+<!--TODO Make sure you add a dependancy on `ui-config-collector" (core package) to use this method -->
+
+## <a name="linking_collections">Linking collections</a>
+
+To create links, define needed links in an object (As explained in [grapher documentation](https://cult-of-coders.github.io/grapher/#Linking-Collections)). This same object will be used to initiate grapher links (through `Collection.addLinks`) and to declare the existence of these links internally to the system (using `addGrapherLinks`).
+In `lib/both/main.js` write the following code and update [subscribed fields](#lists_pagination)
+
+```javascript
+import Collector from "meteor/ui-config-collector";
+const { methods: {  addGrapherLinks  } } = Collector;
+const links = {
+  postOwner: { //custom link name
+    type: "one", //either "one" or "many"
+    collection: Meteor.users, //collection instance
+    field: "createdBy" //field in "posts" collection holding the _id of a record from "users" collection 
+  },
+  .....
+};
+Meteor.Collection.get("posts").addLinks(links);
+addGrapherLinks({ name: "posts", links });
+```
