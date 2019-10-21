@@ -5,8 +5,14 @@ Table of Content
 - [Introduction](#intro)
 - [Getting started](#getting_started)
 - [Layout customization](#layout_customization)
+  - [Title](#title)
+  - [Logo](#logo)
+  - [Styles](#styles)
+  - [Footer message](#footer_message)
 - [Add Custom Modules](#add_custom_modules)
 - [Built-in list view](#list_view_feature)
+  - [](#)
+  - [](#)
 - [Collections links](#linking_collections)
 
 ## <a name="intro">Introduction </a>
@@ -82,7 +88,7 @@ The repository meteor-grow/<project-name>/core is the core framework (Grow Frame
 
 ## <a name="layout_customization">Layout customization</a>
 
-### Title
+### <a name="title">Title</a>
 
 To change the document title, simply override it in `custom/startup/client/config.js` like so.
 
@@ -90,7 +96,7 @@ To change the document title, simply override it in `custom/startup/client/confi
 document.title = "Your title goes here";
 ```
 
-### Logo
+### <a name="logo">Logo</a>
 
 Logo is the image appearing in the header, on top of the collapsible sidebar.
 Inside `custom/startup/client/config.js` as well, you need to declare a constant named **CustomBranding**, and export it holding a react element (with `logo` className) destined to be your custom logo.
@@ -119,7 +125,7 @@ const CustomBranding = (
 module.exports = { CustomBranding };
 ```
 
-### Styles
+### <a name="styles">Styles</a>
 
 In `custom/startup/client/skin.less` define your styling rules then wrap them with one main class, as in the following example.
 
@@ -185,7 +191,7 @@ However, declaring global variables to use in your custom module's `styles.css` 
 import "./mainCss.css";
 ```
 
-### Footer message
+### <a name="footer_message">Footer message</a>
 
 In `custom/startup/client/config.js` file, the constant **CustomFooter** is a <footer> tag (with `main-footer` className) holding the message to be shown at the bottom of all pages (usually holds branding and copy rights). This constant would be accessible through the file exports.
 As follows:
@@ -280,7 +286,7 @@ Package.onUse(function(api) {
 });
 ```
 
-## Collection creation
+## <a name="collection_creation">Collection creation</a>
 
 "both" holds all files related to the collection and its schema
 
@@ -312,79 +318,27 @@ import "./collection";
 
 This is to organize and centralize collection declaration code, and to maintain an easy way to reference and change collection's schema.
 
-<!-- Why adding another schema for my collection?
-The adjusted schema is used in Query Box and Form generator .
-
-Depending on a custom schema, gives me the ability to undirectly control dynamic component , which depends on the collection schema.
-
-Using the main simpl-schema forces considering unwanted or secured fields to be accessed.
-
-In addition, optimized schema lets me add extra informations i need. Especially, when having relational links to be put in a form generator.
-
-Important:
-It's of the same structure of a schema but it'll not be attached to the collection with attchSchema as the simpl-schema .
-
-
-How to add the side schema  ?
-In your custom package, go to  main.js file ('lib/both/main.js').
-
-Use the method addSchema defined in "ui-config-collector" methods.
-
-Specify the name of your collection and give it your needed schema object.
-
-Just like simpl-schema, the keys of nested objects are the fields of the collection. Each can hold : type, allowedValues , & label fields, and they will be used when working with schemas.
-
-As for foreign keys and fields coming from other collections , extra info are needed (isLink, linkName, linkedField,& linkedCollection).
-
-import Collector from 'meteor/ui-config-collector'
-const {methods:{addSchema}}=Collector
-
-const myAdjustedSchema={
- fieldNameA1:{
-  type: String,
-  label:'My first field'
- },
- fieldNameA2:{
-  type: Number,
-  allowedValues:[1,2,3]
- },
- fieldNameAB:{
-  type: String,
-  label: 'Field related to collection B',
-  isLink: true,
-  linkedCollection: "collectionB",
-  linkedField: "fieldNameB1", /* the field needed from the collection B*/
-  linkName: "link-A-B"
- }
-}
-
-addSchema({name: "collectionA" , schema: myAdjustedSchema })
-
-Make sure you add a dependancy on "ui-config-collector" (core package) to use this method
-
- -->
-
-## Adjusted schema
-
-<!-- ## <a name="add_custom_modules"></a> -->
-<!-- TODO elaborate on fields of type object + if not exist query box will take all original schema fields -->
+## <a name="adjusted_schema">Adjusted schema</a>
 
 Why adding another schema for my collection?
-The adjusted schema is used in Query Box and Form generator .
-Depending on a custom schema, gives me the ability to indirectly control dynamic components, which depend on collection's schema.
-In addition, optimized schema lets me add extra informations, especially, when having relational links to be put in a form generator.
 
+The adjusted schema is used by the **Query box** and **Form generator**. It helps identify the type of a field and find out the input that suits it the best.
+If customized schema not provided, **Form generator** will not work while **Query box** will depend on the original simpl-schema.
+
+<!-- Important:
+It's of the same structure of a schema but it'll not be attached to the collection with attchSchema as the simpl-schema . -->
+<!-- How to add the side schema ? -->
+<!-- TODO elaborate on fields of type object + if not exist query box will take all original schema fields -->
 <!-- TODO what is it like / how to write it -->
+<!-- TODO translation -->
+<!-- TODO attach schema links, hook, grapher ... -->
+<!-- TODO side bar seperators (dividers) -->
 
-How to add the side schema ?
-In `lib/both/main.js`, use the method `addSchema` provided by `ui-config-collector`, specify the name of your collection ("posts") and give it the customized schema object.
-Just like simpl-schema, the keys of nested objects are the fields of the collection. Each can hold : type (String, Number, Boolean, Object...), an array of allowedValues , a label field.
-As for foreign keys and fields coming from other collections , extra info are needed:
-
-- isLink (of value `true`)
-- linkName (as it's defined in grapher links)
-- linkedField
-- linkedCollection
+How to add it ?
+In `lib/both/main.js`, use the method `addSchema` of `ui-config-collector`.
+Similarly to the schema declaration in [collection creation](#collection_creation), fields definition can hold: type (String, Number, Boolean, Date, Object...), an array of allowedValues, and a label.
+As for foreign fields, additional info are needed: isLink, linkName, linkedField, and linkedCollection.
+For example:
 
 ```javascript
 import Collector from "meteor/ui-config-collector";
@@ -392,26 +346,32 @@ const {
   methods: { addSchema }
 } = Collector;
 
-const myAdjustedSchema = {
-  fieldNameA1: {
+const adjustedSchema = {
+  title: { type: String, label: "My post title" },
+  isPublished: { type: Boolean, label: "Status" },
+  shareWith: {
     type: String,
-    label: "My first field"
+    allowedValues: ["public", "friends", "friends of friends"]
   },
-  fieldNameA2: {
-    type: Number,
-    allowedValues: [1, 2, 3]
-  },
-  fieldNameAB: {
+  views: { type: Number },
+  likers: { type: Array },
+  "likers.$": { type: String },
+  createdBy: {
     type: String,
-    label: "Field related to collection B",
+    label: "Field related to another collection",
     isLink: true,
-    linkedCollection: "collectionB",
-    linkedField: "fieldNameB1" /* the field needed from the collection B*/,
-    linkName: "link-A-B"
+    linkedCollection: "users",
+    linkedField: "name", // the field needed from users collection
+    linkName: "postOwner" // as it's defined in grapher links
+  },
+  extraInfo: {
+    type: Object,
+    location: { type: String },
+    postedAt: { type: Date }
   }
 };
 
-addSchema({ name: "collectionA", schema: myAdjustedSchema });
+addSchema({ name: "posts", schema: adjustedSchema });
 ```
 
 ## <a name="list_view_feature">Built-in listing component</a>
@@ -439,6 +399,7 @@ To pass to that step, we need to fulfill the [pagination step](#pagination_step)
 // useQueryBox={true}
 // hideGroups={true}
 -->
+<!-- TODO .. overriding a schema like users masalan + hideFromUi option -->
 
 ```javascript
 import React from "react";
@@ -507,7 +468,7 @@ if(Meteor.isClient){
 addListColumns({name: 'collectionName', columns: myColumns })
 ```
 
-### Make columns sortable
+### <a name="sortable_columns">Make columns sortable</a>
 
 After declaring the columns array, adding to a column's definition an additional field `sortingPath` will make sortable. `sortingPath` is the path of the record's info you to sort by.
 Your code will look something like this:
@@ -624,6 +585,32 @@ addPrintSchema({
 The object structure used in the `schema` field above is following the pdfmake documentation. For more info about how to customize the pdf report you want to build, visit [pdfmake playground](https://pdfmake.github.io/docs/document-definition-object/)
 
 <!--TODO Make sure you add a dependancy on `ui-config-collector" (core package) to use this method in package.js file -->
+
+### Export to Excel
+
+If you want to control the exported excel sheet when using the built in list view, you have to configure a schema in order for the excel generator to be able to build the columns correctly
+
+How to add the export schema ?
+
+In `lib/both/main.js`, use the method `addExportSchema` found in `ui-config-collector` collector.
+Specify the name of your collection and give it your needed schema object.
+If a collection `posts` has the data model {extraInfo:{location,postedAt}}, we have to set the export schema as follows:
+
+```javascript
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { addExportSchema }
+} = Collector;
+addExportSchema({
+  name: "posts",
+  schema: {
+    Location: "extraInfo.location",
+    "Creation date": "extraInfo.postedAt"
+  }
+});
+```
+
+<!-- Make sure you add a dependancy on "ui-config-collector" (core package) to use this method -->
 
 ## <a name="linking_collections">Linking collections</a>
 
