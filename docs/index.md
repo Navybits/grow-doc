@@ -11,11 +11,15 @@ Table of Content
   - [Footer message](#footer_message)
 - [Add Custom Modules](#add_custom_modules)
 - [Built-in list view](#list_view_feature)
-  - [](#)
-  - [](#)
+  - [list_view_integration](#list_view_integration)
+  - [columns_content](#columns_content)
+  - [sortable_columns](#sortable_columns)
+  - [lists_pagination](#lists_pagination)
+  - [print_pdf](#print_pdf)
+  - [export_excel](#export_excel)
 - [Collections links](#linking_collections)
 
-## <a name="intro">Introduction </a>
+## <a name="intro">Introduction</a>
 
 Grow Framework V2.0 is a javascript backend framework built using [meteorjs](https://www.meteor.com/), [reactjs](https://reactjs.org/) and [adminLTE](https://adminlte.io/) technologies
 
@@ -376,7 +380,7 @@ addSchema({ name: "posts", schema: adjustedSchema });
 
 ## <a name="list_view_feature">Built-in listing component</a>
 
-### How to use built-in list view?
+### <a name="list_view_integration">How to use built-in list view?</a>
 
 Use the component `ListDefaultView` provided by `ui-config-collector` core package.
 Specify your collection name in the props `collectionName`. In some cases, when you need to distinguish 2 different faces of the same collection, you can use `list` property.
@@ -440,7 +444,7 @@ export default withTracker(props => {
 This list view includes by default the pagination feature. To disable it, use `hidePagination` prop with **true** value.
 In case you want your list paginated but you need to prevent the user from changing the `limit` of records per page, review [Lists pagination](#lists_pagination)
 
-### How to determine the columns content ?
+### <a name="columns_content">How to determine the columns content ?</a>
 
 The list component needs to have an array of objects. Each object represents a column.
 You can manage the header of a column `label`, and the info displayed in it through `fieldName`.
@@ -468,7 +472,7 @@ if(Meteor.isClient){
 addListColumns({name: 'collectionName', columns: myColumns })
 ```
 
-### <a name="sortable_columns">Make columns sortable</a>
+### <a name="sortable_columns">How to make columns sortable ?</a>
 
 After declaring the columns array, adding to a column's definition an additional field `sortingPath` will make sortable. `sortingPath` is the path of the record's info you to sort by.
 Your code will look something like this:
@@ -494,7 +498,7 @@ if(Meteor.isClient){
 addListColumns({name: 'posts', columns: myColumns })
 ```
 
-### <a name="lists_pagination">Lists pagination</a>
+### <a name="lists_pagination">How to manage lists pagination ?</a>
 
 One of the main configurations to move on with offered core features is what we call **pagination info**.
 This configuration mainly controls the info related to list pagination. It's an object that holds a **`limit`** (of type `number`: defaults to 25 records per page). It supports **`skip`** option as well (of type `number`: defaults to 0 skipped records from the queried data cursor).But the most affective option is **`fields`**.
@@ -551,7 +555,7 @@ addPaginationInfo({ name:"posts" , info: { limit: 5, preventLimitEdit:true,
                   })
 ```
 
-### Print as pdf
+### <a name="print_pdf">Print as pdf</a>
 
 If you want to add ability to print data to pdf from list view, you have to configure a print schema
 In `lib/both/main.js`, use the method `addPrintSchema` defined in `ui-config-collector`, specify the name of your collection and give it your needed schema object.
@@ -586,7 +590,7 @@ The object structure used in the `schema` field above is following the pdfmake d
 
 <!--TODO Make sure you add a dependancy on `ui-config-collector" (core package) to use this method in package.js file -->
 
-### Export to Excel
+### <a name="export_excel">Export to Excel</a>
 
 If you want to control the exported excel sheet when using the built in list view, you have to configure a schema in order for the excel generator to be able to build the columns correctly
 
