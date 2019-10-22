@@ -11,12 +11,12 @@ Table of Content
   - [Footer message](#footer_message)
 - [Add Custom Modules](#add_custom_modules)
 - [Built-in list view](#list_view_feature)
-  - [list_view_integration](#list_view_integration)
-  - [columns_content](#columns_content)
-  - [sortable_columns](#sortable_columns)
-  - [lists_pagination](#lists_pagination)
-  - [print_pdf](#print_pdf)
-  - [export_excel](#export_excel)
+  - [How to use built-in list view?](#list_view_integration)
+  - [How to determine the columns content ?](#columns_content)
+  - [How to make columns sortable ?](#sortable_columns)
+  - [How to manage lists pagination ?](#lists_pagination)
+  - [Print as pdf](#print_pdf)
+  - [Export to Excel](#export_excel)
 - [Collections links](#linking_collections)
 
 ## <a name="intro">Introduction</a>
