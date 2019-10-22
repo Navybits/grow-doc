@@ -24,6 +24,8 @@ Table of Content
   - [Print as pdf](#print_pdf)
   - [Export to Excel](#export_excel)
 - [Route creation](#route_creation)
+- [Form generator](#form_generator)
+  - [Translatable fields](#translatable_fields)
 
 ## <a name="intro">Introduction</a>
 
@@ -417,6 +419,12 @@ To pass to that step, we need to fulfill the [pagination step](#pagination_step)
 `ListDefaultView` provides additional props as well.
 **List view additional options**:
 
+<!-- HeaderContent
+QueryBox
+DataCalendar
+DataGraph
+DataListComponent
+PaginationBox -->
 <!-- list/collectionList -->
 
 - `listTitle`: optional string to be displayed on top of the resultant list.
@@ -534,52 +542,71 @@ If **fields** is left empty, all schema fields will be returned.
 `lib/both/main.js` will hold the following:
 
 ```javascript
-import Collector from 'meteor/ui-config-collector'
-const {methods: { addPaginationInfo }}=Collector
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { addPaginationInfo }
+} = Collector;
 
-addPaginationInfo({ name:"posts" , info: { limit: 5,
-                                           skip:1,
-                                           fields:{
-                                             title:1,
-                                              ....}
-                                          }
-                  })
+addPaginationInfo({
+  name: "posts",
+  info: {
+    limit: 5,
+    skip: 1,
+    fields: {
+      title: 1
+      // ....
+    }
+  }
+});
 ```
 
 To disable the capability of limit selection change add the previous object the property `preventLimitEdit` and set it to true. Your code will become:
 
 ```javascript
-import Collector from 'meteor/ui-config-collector'
-const {methods:{addPaginationInfo}}=Collector
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { addPaginationInfo }
+} = Collector;
 
-addPaginationInfo({ name:"posts" , info: { limit: 5, preventLimitEdit:true,
-                                           skip:1,
-                                           fields:{
-                                             title:1,
-                                             ....}
-                                         }
-                  })
+addPaginationInfo({
+  name: "posts",
+  info: {
+    limit: 5,
+    preventLimitEdit: true,
+    skip: 1,
+    fields: {
+      title: 1
+      // ....
+    }
+  }
+});
 ```
 
 As for data resultant from grapher links, it can be found in an object field holding the correspondante link name. This is, for sure, after apssing through [Linking collections](#linking_collections) step.
 So in fields you can choose the fields you want to get from the target linked collection, as follows:
 
 ```javascript
-import Collector from 'meteor/ui-config-collector'
-const {methods:{addPaginationInfo}}=Collector
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { addPaginationInfo }
+} = Collector;
 
-addPaginationInfo({ name:"posts" , info: { limit: 5, preventLimitEdit:true,
-                                           skip:1,
-                                           fields:{
-                                             title:1,
-                                             postOwner:{
-                                               name:1,
-                                               email:1,
-                                               ...
-                                             }
-                                             ....}
-                                         }
-                  })
+addPaginationInfo({
+  name: "posts",
+  info: {
+    limit: 5,
+    preventLimitEdit: true,
+    skip: 1,
+    fields: {
+      title: 1,
+      postOwner: {
+        name: 1,
+        email: 1
+        // ...
+      }
+    }
+  }
+});
 ```
 
 ### <a name="print_pdf">Print as pdf</a>
@@ -643,15 +670,127 @@ addExportSchema({
 
 <!-- Make sure you add a dependancy on "ui-config-collector" (core package) to use this method -->
 
+## <a name="form_generator">Form generator</a>
+
+### <a name="translatable_fields">Translatable fields</a>
+
+In order to make a field translatable:
+
+1. Add the array of strings `translationIds` to your schema:
+
+```javascript
+// ...
+translationIds: {
+    type:Array,
+    optional:true
+    },
+'translationIds.$':String
+```
+
+2. Disable attaching the schema in your `lib/both/collection.js` file
+
+```javascript
+// Collection.attachSchema(SchemaName);
+```
+
+3. Add translation links with the relevant pagination config, in `lib/both/main.js` file:
+
+```javascript
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { addGrapherLinks, addPaginationInfo, addGrapherCacheFields }
+} = Collector;
+import Collection from "./collection";
+import CollectionName from "./collectionName";
+const links = {
+  // ...
+  liveTranslations: {
+    type: "many",
+    collection:
+      Meteor.Collection.get("translations") ||
+      new Mongo.Collection("translations"),
+    field: "translationIds"
+  }
+};
+Collection.addLinks(links);
+addGrapherLinks({ name: CollectionName, links });
+
+const paginationInfo = {
+  limit: 10,
+  skip: 0,
+  fields: {
+    // ....
+    translationIds: 1,
+    liveTranslations: {
+      fieldName: 1,
+      content: 1,
+      language: 1,
+      lang: 1
+    }
+  }
+};
+addGrapherCacheFields({ name: CollectionName, info: paginationInfo });
+```
+
+4. Create a file `lib/both/collection-attach-schema` that will extend the schema with the relevant translation fields for auto caching of translations inside the record and then re-attach the resultant schema to your collection, as follows:
+
+```javascript
+import collectionNameSchema from "./collectionSchema";
+import CollectionName from "./collectionName";
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { getSchemaExtensionFromLinks }
+} = Collector;
+
+import Collection from "./collection";
+import SimpleSchema from "simpl-schema";
+
+collectionNameSchema.extend(
+  new SimpleSchema(getSchemaExtensionFromLinks(CollectionName))
+);
+
+Collection.attachSchema(collectionNameSchema);
+export default Collection;
+```
+
+5. Require `collection-attach-schema` by `lib/both/main.js` file:
+
+```javascript
+require("./collection-attach-schema");
+```
+
+6. To add a db hook for caching relational fields inside the record document, in your `lib/server/main.js` file add the following:
+
+```javascript
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { addGrapherLinkCacheHook }
+} = Collector;
+import CollectionName from "../both/collectionName";
+addGrapherLinkCacheHook(CollectionName);
+```
+
+7. Finally, `FieldComponent` needs the prop `translatable` to hold the current edited record "_id"
+
+```javascript
+<FieldComponent
+  // ...
+  translatable={recordId}
+/>
+```
+
+**Note**: make sure that the version of simpl-schema used is above 1.4.2 (`"simpl-schema" : "^1.4.2"`)
+
 ## <a name="route_creation">Route creation</a>
 
 In your custom package `lib/client/ui-config.js` file, use the method `addCustomRoutes` to declare the routes and to specifiy their main parameters.
+
 1. `path` : based on [React Router v4](https://reacttraining.com/react-router/web/example/route-config). When using [route params](https://reacttraining.com/react-router/web/api/Hooks/useparams), we can get them by tracking component's `props`(data routed can be found in: `props`->`match`->`params`).
 2. `component` : It's represents the page content to route to, through this path
 3. `name` : It's a unique route name
 4. `group` : It can be a string or an array of string. It checks the existence of this/these group(s) in current user roles. It depends on the group name configured especially for the related collection. Review [Group declaration](#group_config).
-<!-- TODO HOW to add a Group ? + elaborate on roles-->
-Note: no `collectionName` is required by this method, it only takes an array of objects(routes).
+   <!-- TODO HOW to add a Group ? + elaborate on roles-->
+   Note: no `collectionName` is required by this method, it only takes an array of objects(routes).
 
 ```javascript
 import Collector from "meteor/ui-config-collector";
@@ -660,18 +799,18 @@ const {
 } = Collector;
 import { CollectionList, CollectionEditor } from "./components";
 addCustomRoutes([
-  { path: '/posts', component: CollectionList, name: 'Posts list' },
+  { path: "/posts", component: CollectionList, name: "Posts list" },
   {
-    path: '/posts/manage/new',
-    group: 'Posts',
+    path: "/posts/manage/new",
+    group: "Posts",
     component: CollectionEditor,
-    name: 'New post'
+    name: "New post"
   },
   {
-    path: '/posts/:recordId', // Inside "CollectionEditor" component use props.match.params.recordId
-    group: ['Posts','Users'],
+    path: "/posts/:recordId", // Inside "CollectionEditor" component use props.match.params.recordId
+    group: ["Posts", "Users"],
     component: CollectionEditor,
-    name: 'Post Editor'
-  },
+    name: "Post Editor"
+  }
 ]);
 ```
