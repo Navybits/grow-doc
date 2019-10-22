@@ -9,7 +9,13 @@ Table of Content
   - [Logo](#logo)
   - [Styles](#styles)
   - [Footer message](#footer_message)
+  - [Profile menu customization](#profile_menu)
 - [Add Custom Modules](#add_custom_modules)
+- [Collection creation](#collection_creation)
+- [Collection links](#linking_collections)
+- [Adjusted schema](#adjusted_schema)
+  - [Why adding another schema for my collection ?](#adjusted_schema_reason)
+  - [How to add it ?](#adjusted_schema_method)
 - [Built-in list view](#list_view_feature)
   - [How to use built-in list view?](#list_view_integration)
   - [How to determine the columns content ?](#columns_content)
@@ -17,7 +23,7 @@ Table of Content
   - [How to manage lists pagination ?](#lists_pagination)
   - [Print as pdf](#print_pdf)
   - [Export to Excel](#export_excel)
-- [Collections links](#linking_collections)
+- [Route creation](#route_creation)
 
 ## <a name="intro">Introduction</a>
 
@@ -216,7 +222,7 @@ const CustomFooter = (
 module.exports = { CustomBranding, CustomSkin, CustomFooter };
 ```
 
-### Profile menu customization
+### <a name="profile_menu">Profile menu customization</a>
 
 To override header's profile menu, you'll need to use this file `custom/ui/pages/userBodySubList.jsx` and customize the returned component containing list item(s) having for class **"user-body"**
 The wrapper element of the returned component would be :
@@ -322,9 +328,29 @@ import "./collection";
 
 This is to organize and centralize collection declaration code, and to maintain an easy way to reference and change collection's schema.
 
+## <a name="linking_collections">Linking collections</a>
+
+To create links, define needed links in an object (As explained in [grapher documentation](https://cult-of-coders.github.io/grapher/#Linking-Collections)). This same object will be used to initiate grapher links (through `Collection.addLinks`) and to declare the existence of these links internally to the system (using `addGrapherLinks`).
+In `lib/both/main.js` write the following code and update [subscribed fields](#lists_pagination)
+
+```javascript
+import Collector from "meteor/ui-config-collector";
+const { methods: {  addGrapherLinks  } } = Collector;
+const links = {
+  postOwner: { //custom link name
+    type: "one", //either "one" or "many"
+    collection: Meteor.users, //collection instance
+    field: "createdBy" //field in "posts" collection holding the _id of a record from "users" collection
+  },
+  .....
+};
+Meteor.Collection.get("posts").addLinks(links);
+addGrapherLinks({ name: "posts", links });
+```
+
 ## <a name="adjusted_schema">Adjusted schema</a>
 
-Why adding another schema for my collection?
+### <a name="adjusted_schema_reason">Why adding another schema for my collection ?</a>
 
 The adjusted schema is used by the **Query box** and **Form generator**. It helps identify the type of a field and find out the input that suits it the best.
 If customized schema not provided, **Form generator** will not work while **Query box** will depend on the original simpl-schema.
@@ -338,7 +364,8 @@ It's of the same structure of a schema but it'll not be attached to the collecti
 <!-- TODO attach schema links, hook, grapher ... -->
 <!-- TODO side bar seperators (dividers) -->
 
-How to add it ?
+### <a name="adjusted_schema_method">How to add it ?</a>
+
 In `lib/both/main.js`, use the method `addSchema` of `ui-config-collector`.
 Similarly to the schema declaration in [collection creation](#collection_creation), fields definition can hold: type (String, Number, Boolean, Date, Object...), an array of allowedValues, and a label.
 As for foreign fields, additional info are needed: isLink, linkName, linkedField, and linkedCollection.
@@ -616,22 +643,35 @@ addExportSchema({
 
 <!-- Make sure you add a dependancy on "ui-config-collector" (core package) to use this method -->
 
-## <a name="linking_collections">Linking collections</a>
+## <a name="route_creation">Route creation</a>
 
-To create links, define needed links in an object (As explained in [grapher documentation](https://cult-of-coders.github.io/grapher/#Linking-Collections)). This same object will be used to initiate grapher links (through `Collection.addLinks`) and to declare the existence of these links internally to the system (using `addGrapherLinks`).
-In `lib/both/main.js` write the following code and update [subscribed fields](#lists_pagination)
+In your custom package `lib/client/ui-config.js` file, use the method `addCustomRoutes` to declare the routes and to specifiy their main parameters.
+1. `path` : based on [React Router v4](https://reacttraining.com/react-router/web/example/route-config). When using [route params](https://reacttraining.com/react-router/web/api/Hooks/useparams), we can get them by tracking component's `props`(data routed can be found in: `props`->`match`->`params`).
+2. `component` : It's represents the page content to route to, through this path
+3. `name` : It's a unique route name
+4. `group` : It can be a string or an array of string. It checks the existence of this/these group(s) in current user roles. It depends on the group name configured especially for the related collection. Review [Group declaration](#group_config).
+<!-- TODO HOW to add a Group ? + elaborate on roles-->
+Note: no `collectionName` is required by this method, it only takes an array of objects(routes).
 
 ```javascript
 import Collector from "meteor/ui-config-collector";
-const { methods: {  addGrapherLinks  } } = Collector;
-const links = {
-  postOwner: { //custom link name
-    type: "one", //either "one" or "many"
-    collection: Meteor.users, //collection instance
-    field: "createdBy" //field in "posts" collection holding the _id of a record from "users" collection
+const {
+  methods: { addCustomRoutes }
+} = Collector;
+import { CollectionList, CollectionEditor } from "./components";
+addCustomRoutes([
+  { path: '/posts', component: CollectionList, name: 'Posts list' },
+  {
+    path: '/posts/manage/new',
+    group: 'Posts',
+    component: CollectionEditor,
+    name: 'New post'
   },
-  .....
-};
-Meteor.Collection.get("posts").addLinks(links);
-addGrapherLinks({ name: "posts", links });
+  {
+    path: '/posts/:recordId', // Inside "CollectionEditor" component use props.match.params.recordId
+    group: ['Posts','Users'],
+    component: CollectionEditor,
+    name: 'Post Editor'
+  },
+]);
 ```
