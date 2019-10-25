@@ -25,6 +25,8 @@ Table of Content
   - [Export to Excel](#export_excel)
 - [Route creation](#route_creation)
 - [Form generator](#form_generator)
+  - [Form view](#form_view)
+  - [Field component](#field_component)
   - [Translatable fields](#translatable_fields)
 
 ## <a name="intro">Introduction</a>
@@ -369,7 +371,7 @@ It's of the same structure of a schema but it'll not be attached to the collecti
 ### <a name="adjusted_schema_method">How to add it ?</a>
 
 In `lib/both/main.js`, use the method `addSchema` of `ui-config-collector`.
-Similarly to the schema declaration in [collection creation](#collection_creation), fields definition can hold: type (String, Number, Boolean, Date, Object...), an array of allowedValues, and a label.
+Similarly to the schema declaration in [collection creation](#collection_creation), fields definition can hold: type (String, Number, Boolean, Date, Object, Time, Array...), an array of allowedValues, and a label.
 As for foreign fields, additional info are needed: isLink, linkName, linkedField, and linkedCollection.
 For example:
 
@@ -672,6 +674,125 @@ addExportSchema({
 
 ## <a name="form_generator">Form generator</a>
 
+### <a name="form_view">Form view</a>
+
+`FormView` is a ready component that's provided by `form-default-view` core package
+It's a non-styled dynamic form generator which automatically iterats over the collection fields and displays the right component for each of them, referring to the adjusted schema already added. (Check [Adjusted schema documentation](#adjusted_schema)).
+
+`FormView` needs the following props:
+
+- `collectionName`: the collectionName set when defining the adjusted schema
+- `setFiledValue`: a function that receives as arguments the input value entered by user as well as the field name
+- `record`: helps prefill the field input with its default/initial value
+- `displayedFields`: an optional array of strings, gives us ability to focus on the fields we need and ignore the rest of what's in the schema (for, you may define some fields in your adjusted schema to be used by the `Query box` and not by `FormView`)
+- `boxHeader`: an optional function to customize the form header content
+- `boxFooter`: an optional function to customize the form footer content
+
+```javascript
+import React from 'react'
+import { FormView }from 'meteor/form-default-view'
+import { LinkWrapper } from "meteor/common-layout";
+const Link = LinkWrapper;
+
+class MyClass extends React.Component {
+ render(){
+   return (
+           <FormView collectionName="posts"
+                     setFieldValue={ (val, fieldName)=>{/*......*/} }
+                     displayedFields={['title', 'createdBy',...]}
+                     record={currentDatabaseRecord}
+                     boxHeader={()=>('My box title')}
+                     boxFooter={()=>(<Link className="btn btn-default" onClick={()=>{/*......*/}}>Done</Link>)}
+             />
+    )
+ }
+}
+```
+
+### <a name="field_component">Field component</a>
+
+A more flexible and controllable form generating approach is `FieldComponent`. `FieldComponent`, that's available in `form-default-view` package, handles a single field at a time, studies its properties and returns the convenient component depending on the [adjusted schema](#adjusted_schema). As well as offering ability to customize this component regardlessly to the field definition in schema.
+We must note that some props may differ according to the field type which controls the resultant component.
+
+`FieldCompnent` props are as follows:
+
+- `fieldName`
+- `label`: if not provided, the fieldName is displayed unless a `label` is provided in [adjusted schema](#ajusted_schema). (`label` will be treated and capitalized unless `noLabelManipulation` option is set to **true** )
+- `field`: used in place of `fieldName` and `label`. It's a "single field" object similar to [adjusted schema](#ajusted_schema) definition
+- `setFieldValue`: mandatory if you want to keep up with the "form input" value change
+- `defaultValue`/`defaultChecked`: `defaultChecked` is special for boolean type
+- `required`: displays a red asterisk next to the label of obligatory inputs
+- `disabled`: show the input and disables edit
+- `classNameExtension`: optional, overrides the component's className (which defaults to "col-xs-12")
+- `group`: optional, controls the display of the resultant component accordnig to users access roles
+- `permission`: optional, controls the display of the resultant component accordnig to users access roles
+- `placeholder`: optional, used with strings and dates
+- `maxLength`: optional, used to manage string type
+- `minValue`, `maxValue`: optional, used for numbers
+- `builtInWidget`: optional, can be:
+  1. "text": if the desired output is a textarea
+  2. "html": to get an html editor
+  3. "creatable": allows users to create new options(Review [react-select npm documentation](https://www.npmjs.com/package/react-select) for [creatable](https://react-select.com/creatable) multi-select text input)
+- `rows`,`cols`: optional and special for textareas and html editors (if `builtInWidget` is set to "text" or "html")
+- `timeFormatOff`: optional, used with Date type. When set to **true**, it disables time picking and keeps on date picker only
+- `dateFormatOff`: optional, used with Date type. When set to **true**, it disables date picking and keeps on time picker only
+- `onBlur`: optional function
+- `multi`: optional, used to allow multiple selection
+- `queryExtension`: optional, query object to filter the options of an [Async selector](https://react-select.com/async), these options are records coming from another collection through a link build using current field
+- `enhanceLabels`: optional, allows the enhancement and capitalization of [Async selector](https://react-select.com/async) options labels
+- `extraFields`: optional, array of strings. Because having a link field in adjusted schema allows us to define only one main info to get from the targeted collection. This info would be the value of [Async selector](https://react-select.com/async)'s selected option. So if we want any extra info, `extraFields` will hold the array of fields needed.
+- `extra_key`: optional, special for boolean type. It extends the checkbox "id" attribute
+- `input_key`: optional, special for string type. It fills the input "key" attribute
+- `_key`: optional, special for links. When filled with a dynamic content, it forces the [Async selector](https://react-select.com/async) to refresh
+- `noLabelManipulation`: optional, prevents the manipulation of input's `label`
+- `linkTo`: optional, holds path, makes of the displayed `label` a link, and is supported only for linker fields and thoses of type string
+
+<!--  children            -->
+
+On the other hand, for `FieldComponent`'s custom content use the following props:
+
+1. `collectionName`
+2. `widget`: a function that returns your desired content
+
+<!-- To customize your form page and mass control inputs & widgets shown for each field, you can directly use FieldComponent.
+It's a component which decides what to display according to the field treated. -->
+<!-- It studies the field properties: type, allowedValues , isLink... and returns a convenient widget.
+In addition, FieldComponent supports displaying a custom widget passed in a prop function widget, regardlessly to the field definition. -->
+
+```javascript
+import React from 'react'
+import { FieldComponent } from 'meteor/form-default-view'
+
+class MyClass extends React.Component {
+ render(){
+   return (
+    <div>
+           <FieldComponent collectionName="posts"
+                           setFieldValue={ (val)=>{/*......*/} }
+                           fieldName="title"
+                           label="Post title"
+                           defaultValue={/*...*/}
+            />
+           <FieldComponent collectionName="posts"
+                           setFieldValue={ (val)=>{/*......*/} }
+                           fieldName="extraInfo.location"
+                           label="location"
+                           defaultValue={/*...*/}
+            />
+            <FieldComponent collectionName="posts"
+                            widget={()=>( /*custom code here*/ )}
+             />
+            <FieldComponent collectionName="posts"
+                            field={{type: String,allowedValues: ["public", "friends", "friends of friends"],label:"Share with"}}
+             />
+    </div>
+    )
+ }
+}
+```
+
+Note: `FieldComponent` supports the `fieldName` containing dots for nested fields. As well as supporting arrays and objects.
+
 ### <a name="translatable_fields">Translatable fields</a>
 
 In order to make a field translatable:
@@ -770,7 +891,7 @@ import CollectionName from "../both/collectionName";
 addGrapherLinkCacheHook(CollectionName);
 ```
 
-7. Finally, `FieldComponent` needs the prop `translatable` to hold the current edited record "_id"
+7. Finally, `FieldComponent` needs the prop `translatable` to hold the current edited record "\_id"
 
 ```javascript
 <FieldComponent
