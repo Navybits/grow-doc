@@ -27,7 +27,11 @@ Table of Content
 - [Form generator](#form_generator)
   - [Form view](#form_view)
   - [Field component](#field_component)
-  - [Translatable fields](#translatable_fields)
+- [Translatable fields](#translatable_fields)
+- [Query box](#query_box)
+  - [Search input](#search)
+  - [Filters dropdown](#filters)
+  - [Groups dropdown](#groups)
 
 ## <a name="intro">Introduction</a>
 
@@ -434,6 +438,25 @@ PaginationBox -->
 - `sortByCriteria`: optional field name (defaults to `createdAt` field).
 - `sortByDirection`: optional "asc" or "desc" (defaults to "desc").
 
+<!-- collectionName
+collectionList (list)XXX
+sort...
+allowSelection
+useQueryBox
+getColumnsInfo
+list
+headerProps
+hideGroups
+hideFilters
+hidePagination
+allowCalendar
+renderBeforeList
+highlightRecords
+className
+listClassName
+allowOrdering
+ -->
+
 <!--TODO example to be reviewed
 // list={`${type}`}
 //  allowSelection={true}
@@ -478,8 +501,8 @@ export default withTracker(props => {
 })(CollectionList);
 ```
 
-This list view includes by default the pagination feature. To disable it, use `hidePagination` prop with **true** value.
-In case you want your list paginated but you need to prevent the user from changing the `limit` of records per page, review [Lists pagination](#lists_pagination)
+This list view includes by default the pagination feature, and displays a page selector at the bottom of the list box along with a limit selector at the top right corner. To disable this feature, use `hidePagination` prop with **true** value, and as result, both selectors will be hidden.
+In case you want your list paginated but you need to prevent the user from changing the `limit` of records per page, you can disable limit selector using `preventLimitEdit` as explained [Lists pagination](#lists_pagination)
 
 ### <a name="columns_content">How to determine the columns content ?</a>
 
@@ -497,16 +520,16 @@ if(Meteor.isClient){
 
  const myColumns=[
   {
-    label:'Column #1', fieldName:'fieldName1'
+    label:'Title', fieldName:'title'
   },
   {
-    label:'Column #2', render: (record, info)=>(<span>....</span>)
+    label:'Owner', render: (record, info)=>(<span>....</span>)
   }
 .....
  ]
 }
 
-addListColumns({name: 'collectionName', columns: myColumns })
+addListColumns({name: 'posts', columns: myColumns })
 ```
 
 ### <a name="sortable_columns">How to make columns sortable ?</a>
@@ -793,7 +816,7 @@ class MyClass extends React.Component {
 
 Note: `FieldComponent` supports the `fieldName` containing dots for nested fields. As well as supporting arrays and objects.
 
-### <a name="translatable_fields">Translatable fields</a>
+## <a name="translatable_fields">Translatable fields</a>
 
 In order to make a field translatable:
 
@@ -934,4 +957,143 @@ addCustomRoutes([
     name: "Post Editor"
   }
 ]);
+```
+
+## <a name="query_box">Query box</a>
+
+How to integrate query box in header ?
+The QueyBox allows us to search and filter upon listed records .
+Using [`ListDefaultView`](#list_view_feature), it's hidden by default unless you set the prop `useQueryBox` to true.
+`Query box` offers:
+
+1. A search input
+2. A filtering dropdown-menu
+3. A grouping dropdown-menu
+   Knowing that `Query box` depends on the [`Adjusted schema`](#adjusted_schema) to build its query the right way.
+
+1) <a name="search">Search input:</a>
+   `addSearchableFields` is used in `lib/client/ui-config.js` to specify an array of searchable fields and manage the labels displayed in input's placeholder.(ex: `Search by title, or Post owner name`)
+   If not specified, an "OR operation" will be applied on all the collection fields defined schema, to return what matches the string value entered.
+   The code will be similar to :
+
+```javascript
+import Collector from 'meteor/ui-config-collector'
+const { methods: { addSearchableFields} } = Collector
+
+const mySearchableFields= [
+ {
+   field: 'title'
+ },
+ {
+   field: 'postOwner.name', label:'Post owner name'
+ }
+]
+
+addSearchableFields({name: 'posts', fields: mySearchableFields})
+}
+```
+
+2. <a name="filters">Filters dropdown:</a>
+1. Predefined filters:
+   `addPredefinedFilters` expects an array of arrays. Each array holds objects. Each object (with its `field`, `value` and `label`) represents a filter. Filters held by same array can be combined in an `and` relation, while combining a filters from different sets would be treated as `or`.
+   In `lib/client/ui-config.js`:
+
+```javascript
+import Collector from 'meteor/ui-config-collector'
+const { methods: { addPredefinedFilters} } = Collector
+
+
+const myFilters= [
+[{
+  field: 'isPublished',
+  value: {$eq: true},
+  label: 'Only published posts'
+},
+{
+  field: 'likers',
+  value: {$exists:true, $ne:[]},
+  label: 'Liked posts'
+}],
+[{
+  field: 'isPublished',
+  value: {$ne: true},
+  label: 'Not published posts'}]
+]
+
+addPredefinedFilters({name: 'posts', filters: myFilters})
+}
+```
+
+2. Custom filters:
+   `addFilterableFields` takes an array of objects that specifies the `field`, and optionally: a `label`, and `valuesArray` to be shown as options.
+   `valuesArray` is an array of value-label objects, knowing the value can be a mongodb query.
+   In absence of this declaration, all the fields defined in the [adjusted schema](#adjusted_schema) will be filterable.
+   In `lib/client/ui-config.js`:
+
+```javascript
+import Collector from 'meteor/ui-config-collector'
+const { methods: { addFilterableFields} } = Collector
+
+const myFilterableFields= [
+{
+  field: 'title'
+},
+{
+  field: 'extraInfo.location',
+  label: 'Location',
+  valuesArray: [ {value:{$regex: 'lebanon'}, label: 'In Lebanon'} ]
+}
+]
+
+addFilterableFields({name: 'posts', fields: myFilterableFields})
+}
+```
+
+3. <a name="groups">Groups dropdown:</a>
+1. Predefined groups:
+   `addPredefinedGroups` expects an array of objects which specifies the `field` to group by and optionnally a `label`.
+   In `lib/client/ui-config.js`:
+
+```javascript
+import Collector from 'meteor/ui-config-collector'
+const { methods: { addPredefinedGroups} } = Collector
+
+const myGroups= [
+{
+  field: 'createdBy',
+  label: 'Owner'
+},
+{
+  field: 'extraInfo.location',
+  label: 'Location'
+}
+]
+
+addPredefinedGroups({name: 'posts', groups: myGroups})
+}
+```
+
+2. Custom groups:
+
+You can manage the custom groups used by user, using the method `addGroupableFields`.
+The groupable fields array is similar to `addPredefinedGroups` definition style. If not provided, all fields declared in the adjusted schema will be taken into consideration.
+In `lib/client/ui-config.js`:
+
+```javascript
+import Collector from 'meteor/ui-config-collector'
+const { methods: { addGroupableFields} } = Collector
+
+const myFields= [
+ {
+   field: 'extraInfo.postedAt',
+   label: 'Post date'
+ },
+ {
+   field: 'isPublished',
+   label: 'Status'
+ }
+]
+
+addGroupableFields({name: 'posts', fields: myFields})
+}
 ```
