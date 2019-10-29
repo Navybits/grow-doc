@@ -433,36 +433,30 @@ DataListComponent
 PaginationBox -->
 <!-- list/collectionList -->
 
+- `className`
 - `listTitle`: optional string to be displayed on top of the resultant list.
 - `defaultFilters`: optional query object.
 - `sortByCriteria`: optional field name (defaults to `createdAt` field).
 - `sortByDirection`: optional "asc" or "desc" (defaults to "desc").
 
-<!-- collectionName
-collectionList (list)XXX
-sort...
-allowSelection
-useQueryBox
-getColumnsInfo
-list
-headerProps
-hideGroups
-hideFilters
-hidePagination
-allowCalendar
-renderBeforeList
-highlightRecords
-className
-listClassName
-allowOrdering
- -->
+- `useQueryBox`: optional, integrates the full [Query box](#query_box) feature when set to **true**
+- `hideGroups`: optional, hides [groups dropdown](#groups) from the Query box when set to **true**
+- `hideFilters`: optional, hides [filters dropdown](#filters) from the Query box when set to **true**
+- `hidePagination`: optional, hides [pagination](#lists_pagination) feature when set to **true**
+- `getColumnInfo`: optional function, used in [columns content customization](#columns_content)
 
-<!--TODO example to be reviewed
-// list={`${type}`}
-//  allowSelection={true}
-// useQueryBox={true}
-// hideGroups={true}
--->
+- `allowSelection`: optional, if set to **true**, it helps the application of [list actions](#list_actions) on selected records
+  <!-- collectionName
+  collectionList (list)XXX
+  list
+  headerProps
+  allowCalendar
+  renderBeforeList
+  highlightRecords
+  listClassName
+  allowOrdering
+   -->
+
 <!-- TODO .. overriding a schema like users masalan + hideFromUi option -->
 
 ```javascript
@@ -549,7 +543,7 @@ if(Meteor.isClient){
     label:'Titles', fieldName:'title', sortingPath:'title'
   },
   {
-    label:'Owner', render: (record, info)=>(<span>....</span>), sortingPath:'createdByUser.name'
+    label:'Owner', render: (record, info)=>(<span>....</span>), sortingPath:'postOwner.name'
   }
 .....
  ]
@@ -961,7 +955,6 @@ addCustomRoutes([
 
 ## <a name="query_box">Query box</a>
 
-How to integrate query box in header ?
 The QueyBox allows us to search and filter upon listed records .
 Using [`ListDefaultView`](#list_view_feature), it's hidden by default unless you set the prop `useQueryBox` to true.
 `Query box` offers:
