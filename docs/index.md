@@ -23,6 +23,7 @@ Table of Content
   - [How to manage lists pagination ?](#lists_pagination)
   - [Print as pdf](#print_pdf)
   - [Export to Excel](#export_excel)
+- [Built-in calendar view](#calendar_view_feature)
 - [Route creation](#route_creation)
 - [Form generator](#form_generator)
   - [Form view](#form_view)
@@ -413,7 +414,7 @@ const adjustedSchema = {
 addSchema({ name: "posts", schema: adjustedSchema });
 ```
 
-## <a name="list_view_feature">Built-in listing component</a>
+## <a name="list_view_feature">Built-in list view</a>
 
 ### <a name="list_view_integration">How to use built-in list view?</a>
 
@@ -446,16 +447,16 @@ PaginationBox -->
 - `getColumnInfo`: optional function, used in [columns content customization](#columns_content)
 
 - `allowSelection`: optional, if set to **true**, it helps the application of [list actions](#list_actions) on selected records
-  <!-- collectionName
+- `allowCalendar`: optional, if set to **true**, the list header will show a toggle button to switch between list view and [calendar view](#calendar_view_feature)
+  <!--
   collectionList (list)XXX
   list
   headerProps
-  allowCalendar
   renderBeforeList
   highlightRecords
   listClassName
   allowOrdering
-   -->
+  -->
 
 <!-- TODO .. overriding a schema like users masalan + hideFromUi option -->
 
@@ -474,10 +475,15 @@ class CollectionList extends React.Component {
         <ListDefaultView
           collectionName="posts"
           sortByCriteria="type"
+          allowSelection={true}
           listTitle="My List Title"
-          defaultFilters={{
-            type: { $eq: type }
-          }} /*direct form of a query*/
+          defaultFilters={
+            type
+              ? {
+                  type: { $eq: type }
+                }
+              : {}
+          } /*direct form of a query*/
           getColumnInfo={({ row, column, dataToBeRouted }) => {
             return row && row.type;
           }}
@@ -688,6 +694,56 @@ addExportSchema({
 ```
 
 <!-- Make sure you add a dependancy on "ui-config-collector" (core package) to use this method -->
+
+## <a name="calendar_view_feature">Built-in calendar view</a>
+
+It's originally built within the [listing component](#list_view_feature) using [fullcalendar-reactwrapper](https://www.npmjs.com/package/fullcalendar-reactwrapper). When setting `allowCalendar` prop to **true** in `ListDefaultView`, the list view will have a toggle button that switches to calendar view, and any other prop available for [fullcalendar](https://fullcalendar.io/docs) will be supported through this component
+For example:
+
+```javascript
+import React from "react";
+import Collector from "meteor/ui-config-collector";
+const {
+  components: { ListDefaultView }
+} = Collector;
+
+class CollectionList extends React.Component {
+  render() {
+    let { type } = this.props;
+    return (
+      <div className="content">
+        <ListDefaultView
+          collectionName="posts"
+          sortByCriteria="type"
+          allowSelection={true}
+          listTitle="My List Title"
+          defaultFilters={
+            type
+              ? {
+                  type: { $eq: type }
+                }
+              : {}
+          } /*direct form of a query*/
+          getColumnInfo={({ row, column, dataToBeRouted }) => {
+            return row && row.type;
+          }}
+          eventClick={function(event, element, view) {
+            // To make the displayed event calendar a link that routes to post editor
+            self.props.history.push(`/posts/${event._id}`);
+          }}
+        />
+      </div>
+    );
+  }
+}
+export default withTracker(props => {
+  let type = getNested(props, "match", "params", "type");
+  return {
+    currentUser: Meteor.user(),
+    type
+  };
+})(CollectionList);
+```
 
 ## <a name="form_generator">Form generator</a>
 
@@ -938,6 +994,11 @@ const {
 import { CollectionList, CollectionEditor } from "./components";
 addCustomRoutes([
   { path: "/posts", component: CollectionList, name: "Posts list" },
+  {
+    path: "/postsWithType/:type",
+    component: CollectionList,
+    name: "Posts list with type"
+  },
   {
     path: "/posts/manage/new",
     group: "Posts",
