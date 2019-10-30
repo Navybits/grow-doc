@@ -27,6 +27,7 @@ Table of Content
   - [Main list action](#main_action)
 - [Built-in calendar view](#calendar_view_feature)
 - [Route creation](#route_creation)
+- [Menu item creation](#menu_item)
 - [Form generator](#form_generator)
   - [Form view](#form_view)
   - [Field component](#field_component)
@@ -366,14 +367,9 @@ addGrapherLinks({ name: "posts", links });
 The adjusted schema is used by the **Query box** and **Form generator**. It helps identify the type of a field and find out the input that suits it the best.
 If customized schema not provided, **Form generator** will not work while **Query box** will depend on the original simpl-schema.
 
-<!-- Important:
-It's of the same structure of a schema but it'll not be attached to the collection with attchSchema as the simpl-schema . -->
-<!-- How to add the side schema ? -->
-<!-- TODO elaborate on fields of type object + if not exist query box will take all original schema fields -->
 <!-- TODO what is it like / how to write it -->
 <!-- TODO translation -->
 <!-- TODO attach schema links, hook, grapher ... -->
-<!-- TODO side bar seperators (dividers) -->
 
 ### <a name="adjusted_schema_method">How to add it ?</a>
 
@@ -450,10 +446,11 @@ PaginationBox -->
 
 - `allowSelection`: optional, if set to **true**, it helps the application of [list actions](#list_actions) on selected records
 - `allowCalendar`: optional, if set to **true**, the list header will show a toggle button to switch between list view and [calendar view](#calendar_view_feature)
+
+- `headerProps`: optional object, sent as an argument to [main action](#main_action)'s render function.
   <!--
   collectionList (list)XXX
   list
-  headerProps
   renderBeforeList
   highlightRecords
   listClassName
@@ -1102,6 +1099,54 @@ addCustomRoutes([
     group: ["Posts", "Users"],
     component: CollectionEditor,
     name: "Post Editor"
+  }
+]);
+```
+
+## <a name="menu_item">Menu item creation</a>
+
+Using `addCustomMenuItems`, declare the list of menu items you need by specifying their details:
+
+- `linkTo`: of type string. The path to targeted component
+- `menuText`: custom menu item text
+- `order`: optional number (ascending order)
+- `icon`: optional string (font awesome icon class expected). It precedes the `menuText`.
+- `precededBy`: optional string, adds a divider containing this text
+- `group`: optional string or array of strings. Shows the menu item based on user's view role.
+- `parent`: optional object that supports all details of a menu item. It will be a list of menu items. So it can accompany several menu items, and it's recognizied and unified by its **name**
+
+Write the following code in `lib/both/ui-config.js`:
+
+```javascript
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { addCustomMenuItems }
+} = Collector;
+
+addCustomMenuItems([
+  {
+    linkTo: "/posts/manage/new",
+    menuText: "Menu item 1",
+    order: 1 /* order in main menu*/
+  },
+  {
+    linkTo: "/posts",
+    menuText: "My first nested menu item",
+    icon: "fa fa-sitemap",
+    order: 1 /*order in nested list*/,
+    parent: {
+      menuText: "Menu item 2",
+      icon: "fa fa-list",
+      order: 2,
+      group: ["Posts"],
+      precededBy: "Operational"
+    }
+  },
+  {
+    linkTo: "/posts",
+    menuText: "My second nested menu item",
+    order: 2,
+    parent: { name: "Menu item 2" }
   }
 ]);
 ```
