@@ -24,6 +24,7 @@ Table of Content
   - [Print as pdf](#print_pdf)
   - [Export to Excel](#export_excel)
   - [Custom list actions](#list_actions)
+  - [Main list action](#main_action)
 - [Built-in calendar view](#calendar_view_feature)
 - [Route creation](#route_creation)
 - [Form generator](#form_generator)
@@ -750,6 +751,40 @@ const myActionsList = [
 ];
 
 addListActions({ name: "collectionName", actions: myActionsList });
+```
+
+### <a name="main_action">Main list action</a>
+
+Adding a main action will show an additional button (or any custom component you want) on the top of your list view. To do so, `addMainAction` needs a **render** function that return the react desired component.
+`headerProps` is the object received as **render** input, optionally coming through the `ListDefaultView` tag.
+
+In `lib/client/ui-config.js`:
+
+```javascript
+import React from "react";
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { addMainAction }
+} = Collector;
+import { getNested } from "meteor/utils";
+import { LinkWrapper, T } from "meteor/common-layout";
+const Link = LinkWrapper;
+
+addMainAction({
+  name: "posts",
+  action: {
+    render: headerProps => (
+      <Link
+        className="btn btn-xs btn-default action"
+        title={`Create new post of type ${getNested(headerProps, "type") ||
+          ""}`}
+        to={`/posts/manage/new`}
+      >
+        New post of type {getNested(headerProps, "type") || ""}
+      </Link>
+    )
+  }
+});
 ```
 
 ## <a name="calendar_view_feature">Built-in calendar view</a>
