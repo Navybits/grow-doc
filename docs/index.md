@@ -23,6 +23,7 @@ Table of Content
   - [How to manage lists pagination ?](#lists_pagination)
   - [Print as pdf](#print_pdf)
   - [Export to Excel](#export_excel)
+  - [Custom list actions](#list_actions)
 - [Built-in calendar view](#calendar_view_feature)
 - [Route creation](#route_creation)
 - [Form generator](#form_generator)
@@ -407,7 +408,7 @@ const adjustedSchema = {
   extraInfo: {
     type: Object,
     location: { type: String },
-    postedAt: { type: Date }
+    postedAt: { type: Date } // when using `FieldComponent` with type Date, make sure to reconvert the value received in "setFieldValue" o date type
   }
 };
 
@@ -695,6 +696,62 @@ addExportSchema({
 
 <!-- Make sure you add a dependancy on "ui-config-collector" (core package) to use this method -->
 
+### <a name="list_actions">Custom list actions</a>
+
+When setting the list prop `allowSelection` to **true**, the records listed will be selectable.
+Selecting rows will display a dropdown button with built-in actions (delete, [export to excel](#export_excel), and [print as pdf](#print_pdf) when special schema available).
+Every action executed will launch a confirmation pop-up modal.
+
+If the whole list is selected, the modal popup will display an additional button of action **Proceed for all**.
+Once clicked, it will launch a confirmation alert to double check your decision.
+This button will submit the current action on all the records matching your list's `defaultFilters` (even if not all records are shown in the current page).
+**Note**: The query box conditions are not taken into consideration.
+
+To extend the actions menu, use `addListActions` associate an array of objects
+Each object holds 4 fields:
+
+1. `label`: a string that will be displayed in the menu and as a pop-up title.
+2. `text`: optional string that will take place in the modal body (pop-up) of action (if not provided, a default confirmation sentence would be displayed in the popup body indicating the action label).
+3. `extraInfoViewOnProceed`: optional function, that takes a react component as the pop-up body. To handle change and events, it receives a callBack as argument and lets you decide where to execute it. The data you pass to this callBack will be used on submission.
+4. `action` or `methodName`:
+
+- `action`: a function that will be triggered on confirmation. It expects three arguments which are respectively:
+
+  1. the array of ids of all selected records. When the whole list is selected, this array will be empty.
+  2. the extra informations that may be coming from `extraInfoViewOnProceed` content.
+  3. the `defaultFilters` applied to the current list
+
+- `methodName`: the method name as a string. If `action` function is not provided, this string will be used to apply the convenient meteor method on the relevant collection (using `collectionName`).
+
+In `lib/client/ui-config.js`:
+
+```javascript
+import React from "react";
+import Collector from "meteor/ui-config-collector";
+const {
+  methods: { addListActions }
+} = Collector;
+
+const myActionsList = [
+  {
+    label: "Action #1",
+    text: "Are you sure you want to proceed ?",
+    methodName: "serverMethod1" // A custom method that you defined on server side
+  },
+  {
+    label: "Action #2",
+    extraInfoViewOnProceed: cb => (
+      <input type="text" onChange={e => cb(e.target.value)} />
+    ),
+    action: (ids, extra, defaultFilters) => {
+      /*submission action*/
+    }
+  }
+];
+
+addListActions({ name: "collectionName", actions: myActionsList });
+```
+
 ## <a name="calendar_view_feature">Built-in calendar view</a>
 
 It's originally built within the [listing component](#list_view_feature) using [fullcalendar-reactwrapper](https://www.npmjs.com/package/fullcalendar-reactwrapper). When setting `allowCalendar` prop to **true** in `ListDefaultView`, the list view will have a toggle button that switches to calendar view, and any other prop available for [fullcalendar](https://fullcalendar.io/docs) will be supported through this component
@@ -807,8 +864,8 @@ We must note that some props may differ according to the field type which contro
   2. "html": to get an html editor
   3. "creatable": allows users to create new options(Review [react-select npm documentation](https://www.npmjs.com/package/react-select) for [creatable](https://react-select.com/creatable) multi-select text input)
 - `rows`,`cols`: optional and special for textareas and html editors (if `builtInWidget` is set to "text" or "html")
-- `timeFormatOff`: optional, used with Date type. When set to **true**, it disables time picking and keeps on date picker only
-- `dateFormatOff`: optional, used with Date type. When set to **true**, it disables date picking and keeps on time picker only
+- `timeFormatOff`: optional, used with Date type. When set to **true**, it disables time picking and keeps on date picker only (check [react-datetime npm](https://www.npmjs.com/package/react-datetime) behavior)
+- `dateFormatOff`: optional, used with Date type. When set to **true**, it disables date picking and keeps on time picker only (check [react-datetime npm](https://www.npmjs.com/package/react-datetime) behavior)
 - `onBlur`: optional function
 - `multi`: optional, used to allow multiple selection
 - `queryExtension`: optional, query object to filter the options of an [Async selector](https://react-select.com/async), these options are records coming from another collection through a link build using current field
