@@ -1114,6 +1114,7 @@ Using `addCustomMenuItems`, declare the list of menu items you need by specifyin
 - `precededBy`: optional string, adds a divider containing this text
 - `group`: optional string or array of strings. Shows the menu item based on user's view role.
 - `parent`: optional object that supports all details of a menu item. It will be a list of menu items. So it can accompany several menu items, and it's recognizied and unified by its **name**
+- `collection`: optional string, used to retrieve the relevant translation for the `menuText` (beacuase we're usually taking the collectionName as [universe-i18n](https://github.com/vazco/meteor-universe-i18n/#translation-in-packages) nameSpace)
 
 Write the following code in `lib/both/ui-config.js`:
 
