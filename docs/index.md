@@ -32,6 +32,7 @@ Table of Content
 - [Form generator](#form_generator)
   - [Form view](#form_view)
   - [Field component](#field_component)
+  - [Array component](#array_component)
 - [Translatable fields](#translatable_fields)
 - [Query box](#query_box)
   - [Search input](#search)
@@ -956,6 +957,66 @@ class MyClass extends React.Component {
 
 Note: `FieldComponent` supports the `fieldName` containing dots for nested fields. As well as supporting arrays and objects.
 
+### <a name="array_component">Array component</a>
+
+When having a field of type array, the best experience is achieved by what we call `ArrayComponent`.
+We will be able to add/remove elements to/from the array like indicated in the following image:
+![array component](https://portal.navybits.org/web/image/1211/Screenshot%20from%202018-11-19%2014-46-22.png?access_token=b6b1fe3f-92ca-4693-b3d8-a0ffd4066146)
+
+Using `ArrayComponent` is a little bit special. You must be decisive in what you want to repeat (as custom item component), and `ArrayComponent` will be a wrapper around it
+
+- `initialArray`: is the initial list of elements, for example initialArray=[{...},{...}] means we will have 2 item components rendered ("FeatureComponent" in the example)
+- `onAddItem/onRemoveItem`: are functions to be invoked when the user adds or remove items using the plus or trash icons
+- `setData/getData`: are functions given to `ArrayComponent`. They will be accessible by the item component through props, and can be used to handle changes and control events (like onBlur, onClick...)
+
+As shown in the following example:
+
+```javascript
+import React from "react";
+import { ArrayComponent } from "meteor/common-layout";
+
+class CollectionEditor extends React.Component {
+  // ....
+  render() {
+    return (
+      // ....
+      <ArrayComponent
+        wrapperClassName="row"
+        orderByField={"key"}
+        disabled={!edit_mode}
+        initialArray={this.getInitialArray()}
+        onRemoveItem={index => {
+          this.removeFeature(index);
+        }}
+        onAddItem={index => {
+          this.addFeature(index);
+        }}
+        itemActionClassName={""}
+      >
+        <FeatureComponent {...props} /> {/* the component we want to repeat */}
+      </ArrayComponent>
+      // ....
+    );
+  }
+}
+// ....
+```
+
+**Note**: this component `ArrayComponent` is just a wrapper handling the dom manipulation only. Data manipulation must be handled through FeatureComponent and its parent component.
+
+The FeatureComponent will have its index in the array as props, the parent component must share the relevant data with the FeatureComponent through props, then FeatureComponent can call props functions in order to update the parent state and read its new value.
+
+FeatureComponent can be used like :
+
+```javascript
+<FeatureQuota
+  disabled={!edit_mode}
+  record_temp={record_temp}
+  changeField={this.changeField}
+  assignField={this.assignField}
+/>
+```
+
 ## <a name="translatable_fields">Translatable fields</a>
 
 In order to make a field translatable:
@@ -1161,14 +1222,15 @@ You can add breadcrumbs using the component `ContentHeader` defined by the core 
 
 1. Using 3 arrays:
 
-- `breadcrumb`: array of strings
-- `breadcrumbIcon`: array of strings
-- `route` array or strings
+- `breadcrumb`: string or array of strings
+- `breadcrumbIcon`: string or array of strings
+- `route`: string or array or strings
 
 2. Or, using 1 array of objects
 
-- `breadcrumbs`: array of objects of the following form: **[ {route:' ', icon:' ', breadcrumb:' '} ]**
-  In your custom class, you'll have :
+- `breadcrumbs`: array of objects of the following form: **[ {group: '', route: '', icon: '', breadcrumb: ''} ]** ("group" is used manage user's view rights)
+
+In your custom class, you'll have :
 
 ```javascript
 import { ContentHeader, T } from "meteor/common-layout";
@@ -1181,8 +1243,8 @@ class MyCustomClass extends React.Component {
       <ContentHeader
         name={<T _namespace="posts">{"Posts"}</T>} // T is the i18n translation tag
         description="This is the posts listing page"
-        breadcrumb={["Home", "My page"]}
-        breadcrumbIcon={["fa fa-home", ""]}
+        breadcrumb={["Dashboard", "Posts"]}
+        breadcrumbIcon={["fa fa-tachometer-alt", ""]}
         route={["/", ""]}
       />
     );
