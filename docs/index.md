@@ -33,6 +33,7 @@ Table of Content
   - [Form view](#form_view)
   - [Field component](#field_component)
   - [Array component](#array_component)
+  - [Single image uploader](#single_image_uploader)
 - [Translatable fields](#translatable_fields)
 - [Query box](#query_box)
   - [Search input](#search)
@@ -1015,6 +1016,77 @@ FeatureComponent can be used like :
   changeField={this.changeField}
   assignField={this.assignField}
 />
+```
+
+### <a name="single_image_uploader">Single image uploader</a>
+
+`ImageUploader` feature is offered by `image-uploader` built-in package. For best practices, the image is not directly uploaded to [Amazon S3](https://atmospherejs.com/edgee/slingshot). After picking an image file, we control it's upload through `upload` attribute.
+
+So, `ImageUploader` available attributes are:
+
+- `image`: initial image url
+- `disabled`
+- `upload`: Boolean. Used to trigger the image upload on demand
+- `setImageFile`: function. takes the image file object (needed to decide it's safe to upload)
+- `setResult`: function. It keeps track of the uploaded image's **resultant url**
+
+```javascript
+
+changeField(field, val, cb) {
+let { record_temp } = this.state;
+let self = this;
+record_temp = setNested(record_temp, ...field.split('.'), val);
+this.setState({ record_temp }, cb && cb())
+}
+// .....
+// ......
+<div className="col-xs-12 col-sm-12">
+  <ImageUploader
+    image={getNested(this.state,"record_temp", "image")}
+    disabled={!this.state.edit_mode}
+    upload={this.state.launchUpload}
+    setImageFile={image_file => this.setState({ image_file })}
+    setResult={v =>
+      this.changeField("image", v, () => {// changeField method should be updated to support callbacks
+        this.setState(
+          { image_file: null, launchUpload: false }, // this will finish the upload process and re-empty the file object
+          this.addEditRecord
+        );
+      })
+    }
+  />
+</div>
+// ......
+```
+
+We're usually managing to upload the picke image on changes submission. We're, first, setting "launchUpload" to **true** on "save" button click, `setResult` will wait for the upload completion to be executed.
+In `setResult`, as shown in the previous example, we're taking the uploaded image url, and then resetting "launchUpload" to **false**, before we finally save all made changes in our editor.
+This is feasable by relying on the code below:
+
+```javascript
+    addEditRecord() {
+        let { recordId } = this.props;
+        let doc = this.state.record_temp;
+        let params = { doc };
+        if (recordId) params._id = recordId;
+        Interactions.launchLoading();
+        let { image_file } = this.state;
+        if (image_file) // depending on the existence of picked image file
+            return this.setState({ launchUpload: true }); // this will launch the upload and postpone the saving process
+            const submitServerRequest = () =>
+      Meteor.call(
+        `${recordId ? "edit" : "add"}postsDetails`,
+        params,
+        (err, res) => {
+          if (!err) {
+            if (!recordId) {
+              self.props.history.push(`/${collectionName}/${res}`);
+            }
+          }
+        }
+      );
+    submitServerRequest(); // this will proceed with the saving process
+
 ```
 
 ## <a name="translatable_fields">Translatable fields</a>
