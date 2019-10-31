@@ -28,6 +28,7 @@ Table of Content
 - [Built-in calendar view](#calendar_view_feature)
 - [Route creation](#route_creation)
 - [Menu item creation](#menu_item)
+- [Breadcrumbs](#breadcrumbs)
 - [Form generator](#form_generator)
   - [Form view](#form_view)
   - [Field component](#field_component)
@@ -1150,6 +1151,43 @@ addCustomMenuItems([
     parent: { name: "Menu item 2" }
   }
 ]);
+```
+
+## <a name="breadcrumbs">Breadcrumbs</a>
+
+You can add breadcrumbs using the component `ContentHeader` defined by the core package `common-layout`.
+`ContentHeader` takes a name and a description (strings or react components)
+`ContentHeader` accepts 2 ways of defining breadcrumbs sequence:
+
+1. Using 3 arrays:
+
+- `breadcrumb`: array of strings
+- `breadcrumbIcon`: array of strings
+- `route` array or strings
+
+2. Or, using 1 array of objects
+
+- `breadcrumbs`: array of objects of the following form: **[ {route:' ', icon:' ', breadcrumb:' '} ]**
+  In your custom class, you'll have :
+
+```javascript
+import { ContentHeader, T } from "meteor/common-layout";
+import React from "react";
+
+class MyCustomClass extends React.Component {
+  render() {
+    return (
+      // Breadcrumbs will be sorted accordingly to your array's order
+      <ContentHeader
+        name={<T _namespace="posts">{"Posts"}</T>} // T is the i18n translation tag
+        description="This is the posts listing page"
+        breadcrumb={["Home", "My page"]}
+        breadcrumbIcon={["fa fa-home", ""]}
+        route={["/", ""]}
+      />
+    );
+  }
+}
 ```
 
 ## <a name="query_box">Query box</a>
