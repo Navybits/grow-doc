@@ -34,6 +34,7 @@ Table of Content
   - [Field component](#field_component)
   - [Array component](#array_component)
   - [Single image uploader](#single_image_uploader)
+  - [Popup modal](#popup_modal)
 - [Translatable fields](#translatable_fields)
 - [Query box](#query_box)
   - [Search input](#search)
@@ -1092,6 +1093,70 @@ This is feasable by relying on the code below:
       );
     submitServerRequest(); // this will proceed with the saving process
 
+```
+
+### <a name="popup_modal">Popup modal</a>
+
+`ModalComponent` is defined by `common-layout` core package. You can give it the convenient props and it will automatically generate the cutomized modal.
+
+Props includes:
+
+- `id`
+- `title`: popup title
+- `method`: on submitting the modal , this function is executed. It's given the final state .
+- `customContent`: a function that returns a react component
+
+**Note**: You choose between using `customContent` directly, or instead, relying on the internal modal generation for a form with : `fields` and `initialState`.
+
+1. `fields`: an object containing the fields you want to include in your modal.
+
+- By default the modal displays a text/Number input for a field. And each field object supports "label", "defaultValue", "type" (optional input type : **text** or **number**).
+- However, using "content" for a specific field (instead of what's offered in the previous bullet), gives you access to modal's internal state and setState function.
+
+2. `initialState`: to fully control the modal's body content.
+
+Certainly, the button that launches the popup is required to hold two additional attributes: `data-toggle="modal"` and `data-target="#modalId"`. The `data-target` should take the same id given to the modal.
+
+Example:
+
+```javascript
+import { ModalComponent } from 'meteor/common-layout'
+import React from 'react'
+
+class MyCustomClass extends React.Component{
+ render(){
+  return (<div>
+                    {/*First approach*/}<button data-toggle="modal" data-target="#modalId">
+                    Launch popup </button>
+                    <ModalComponent id="modalId"
+                       title="My Title"
+                       initialState={ {fieldName1:'',...} }
+                       fields={ {
+                         fieldName1: {
+                           label:'My field', defaultValue:''
+                         },
+                         fieldName2: {
+                           content: (state, setState)=>(<div>...</div>)
+                         },
+                         fieldName3: {
+                            label:'Field 3', type:'number', defaultValue:3
+                         }
+                       } }
+                        method={(state)=>{...}}
+                     />
+
+
+                    {/*Second approach*/}
+                    <button data-toggle="modal" data-target="#customContentModal">
+                    Launch custom content popup </button>
+                    <ModalComponent id="customContentModal"
+                       title="My second title"
+                       customContent={()=>(<>...</>)}
+                        method={(state)=>{...}}
+                     />
+  </div>)
+ }
+}
 ```
 
 ## <a name="translatable_fields">Translatable fields</a>
