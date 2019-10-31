@@ -39,6 +39,10 @@ Table of Content
   - [Search input](#search)
   - [Filters dropdown](#filters)
   - [Groups dropdown](#groups)
+- [Interactions](#interactions)
+  - [Loading spinner](#loading_spinner)
+  - [Success signal](#success_signal)
+  - [Error alert](#error_alert)
 - [Notes](#notes)
 
 ## <a name="intro">Introduction</a>
@@ -1460,6 +1464,53 @@ const myFields= [
 ]
 
 addGroupableFields({name: 'posts', fields: myFields})
+}
+```
+
+## <a name="interactions">Interactions</a>
+
+### <a name="loading_spinner">Loading spinner</a>
+
+The system's defaults to a special [Lottie animation](https://lottiefiles.com) for loading that's named "refresh".
+Add your custom **loader.json** file to `imports/custom/startup/client` folder and use your own.
+
+### <a name="success_signal">Success signal</a>
+
+To indicate the completion of an action, we display a [Lottie animation](https://lottiefiles.com): "check-mark success".
+You can override it with an animation of your choice by naming its json file **success.json** then placing it in `imports/custom/startup/client` folder.
+The success signal's delay is 3 seconds, customize it with `setSuccessDelay` as follows:
+
+```javascript
+import Interactions from "meteor/interactions";
+Interactions.setSuccessDelay(2000); // number in milliseconds
+```
+
+### <a name="error_alert">Error alert</a>
+
+`launchAlert` is a function with 2 arguments avilable in `interactions` module.
+
+```javascript
+import Interactions from "meteor/interactions";
+Interactions.launchAlert("Error message", "This is the error reason!");
+```
+
+The alert by default disappear after 5 seconds, but you can change this with `setAlertDelay`.
+
+```javascript
+import Interactions from "meteor/interactions";
+Interactions.setAlertDelay(6000); // number in milliseconds
+```
+
+For alert box customization, you can change the header, body and remove-button style using : `customAlertHeaderStyling` , `customAlertBodyStyling` and `customAlertButtonStyling` in `imports/custom/startup/client/config.js` file
+
+```javascript
+const customAlertHeaderStyling={color:"#333",....};
+const customAlertBodyStyling={...};
+const customAlertButtonSyling={...};
+
+module.exports={
+  // ...
+customAlertHeaderStyling, customAlertBodyStyling, customAlertButtonStyling
 }
 ```
 
