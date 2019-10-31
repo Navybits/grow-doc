@@ -35,6 +35,7 @@ Table of Content
   - [Field component](#field_component)
   - [Array component](#array_component)
   - [Single image uploader](#single_image_uploader)
+  - [Multiple images uploader (dropzone)](#dropzone)
   - [Popup modal](#popup_modal)
 - [Translatable fields](#translatable_fields)
 - [Query box](#query_box)
@@ -377,9 +378,7 @@ addGrapherLinks({ name: "posts", links });
 The adjusted schema is used by the **Query box** and **Form generator**. It helps identify the type of a field and find out the input that suits it the best.
 If customized schema not provided, **Form generator** will not work while **Query box** will depend on the original simpl-schema.
 
-<!-- TODO what is it like / how to write it -->
-<!-- TODO translation -->
-<!-- TODO attach schema links, hook, grapher ... -->
+<!-- TODO sytem languages -->
 
 ### <a name="adjusted_schema_method">How to add it ?</a>
 
@@ -462,7 +461,6 @@ PaginationBox -->
 - `allowOrdering`: optional, enables "drag and drop" feature (Review [draggable rows](#draggable_rows))
 
   <!--
-  collectionList (list)XXX
   list
   renderBeforeList
   highlightRecords
@@ -574,16 +572,17 @@ To enable list rows ordering, all you have to do is:
 1. add prop `allowOrdering={true}` to the `<ListDefaultView .../>` component
 2. add order field to the [collection schema](#collection_creation)
 3. add before insert hook to fill incremental order value starting from 0
-4. make sure the order field is always published in [pagination info](#lists_pagination) 
+4. make sure the order field is always published in [pagination info](#lists_pagination)
+
 ```javascript
 // ...
- fields:{
+fields: {
   //  ...
-   order:1
+  order: 1;
   //  ...
- }
+}
 //  ...
- ```
+```
 
 ### <a name="lists_pagination">How to manage lists pagination ?</a>
 
@@ -693,8 +692,6 @@ addPrintSchema({
 ```
 
 The object structure used in the `schema` field above is following the pdfmake documentation. For more info about how to customize the pdf report you want to build, visit [pdfmake playground](https://pdfmake.github.io/docs/document-definition-object/)
-
-<!--TODO Make sure you add a dependancy on `ui-config-collector" (core package) to use this method in package.js file -->
 
 ### <a name="export_excel">Export to Excel</a>
 
@@ -1112,6 +1109,74 @@ This is feasable by relying on the code below:
       );
     submitServerRequest(); // this will proceed with the saving process
 
+```
+
+### <a name="dropzone">Multiple images uploader (dropzone)</a>
+
+Similar to [Single image uploader](#single_image_uploader), `MultipleImageUploader` is offered by `image-uploader`.
+
+And `MultipleImageUploader` attributes are:
+
+- `images`: array of initial images urls
+- `disabled`
+- `upload`: Boolean. Used to trigger the images upload on demand
+- `setImageFiles`: function
+- `setResult`: function
+- `onDoubleClickImage`: custom function to handle double click event
+
+```javascript
+import { MultipleImageUploader } from "meteor/image-uploader";
+// ...
+<div className="row">
+  <div className="col-sm-9">
+    <MultipleImageUploader
+      images={getNested(record_temp, "banners")}
+      disabled={!edit_mode}
+      upload={launchUpload}
+      onDoubleClickImage={image => {
+        if (image && image.src) this.changeField("profile", image.src);
+      }}
+      setImageFiles={image_files => this.setState({ image_files })}
+      setResult={v => {
+        this.changeField("banners", v, () => {
+          this.setState(
+            { image_files: null, launchUpload: false },
+            this.addEditRecord
+          );
+        });
+      }}
+    />
+    {edit_mode && getNested(record_temp, "banners", 0) ? (
+      <h5>
+        <strong>
+          {
+            "Double click any of the above images in order to make it cover image"
+          }
+        </strong>
+      </h5>
+    ) : null}
+  </div>
+  <div className="col-sm-3">
+    <label className="col-sm-3">Cover Image</label>
+    {getNested(record_temp, "profile") ? (
+      <div className="col-sm-9">
+        <img src={record_temp.profile} className="thumb product-cover-thumb" />
+      </div>
+    ) : null}
+  </div>
+</div>;
+// ...
+```
+
+The submission function becomes:
+
+```javascript
+addEditRecord() {
+    let { recordId } = this.props;
+ let { image_files, record_temp } = this.state;
+ if (image_files) return this.setState({ launchUpload: true });
+//  ...
+ }
 ```
 
 ### <a name="popup_modal">Popup modal</a>
