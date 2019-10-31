@@ -39,6 +39,7 @@ Table of Content
   - [Search input](#search)
   - [Filters dropdown](#filters)
   - [Groups dropdown](#groups)
+- [Notes](#notes)
 
 ## <a name="intro">Introduction</a>
 
@@ -1460,4 +1461,31 @@ const myFields= [
 
 addGroupableFields({name: 'posts', fields: myFields})
 }
+```
+
+## <a name="notes">Notes</a>
+
+- Using built-in features requires a dependency to the relevant core package.
+  You shall add the package name to "packages" array in the `package.js` file of your custom module:
+
+```javascript
+// ...
+Package.onUse(function (api) {
+    let packages = [
+        'ecmascript',
+        'utils',
+        'logger',
+        'image-uploader',
+        'ui-config-collector',
+        'common-layout'
+        // ...
+    ];
+    // grant this package access to other packages symbols
+    api.use(packages);
+    // grant the app using this package access to other packages symbols
+    api.imply(packages);
+    // ...
+    // ...
+}
+// ...
 ```
