@@ -20,6 +20,7 @@ Table of Content
   - [How to use built-in list view?](#list_view_integration)
   - [How to determine the columns content ?](#columns_content)
   - [How to make columns sortable ?](#sortable_columns)
+  - [How to make rows draggable ?](#draggable_rows)
   - [How to manage lists pagination ?](#lists_pagination)
   - [Print as pdf](#print_pdf)
   - [Export to Excel](#export_excel)
@@ -454,19 +455,19 @@ PaginationBox -->
 - `getColumnInfo`: optional function, used in [columns content customization](#columns_content)
 
 - `allowSelection`: optional, if set to **true**, it helps the application of [list actions](#list_actions) on selected records
+- `headerProps`: optional object, sent as an argument to [main action](#main_action)'s render function.
+
 - `allowCalendar`: optional, if set to **true**, the list header will show a toggle button to switch between list view and [calendar view](#calendar_view_feature)
 
-- `headerProps`: optional object, sent as an argument to [main action](#main_action)'s render function.
+- `allowOrdering`: optional, enables "drag and drop" feature (Review [draggable rows](#draggable_rows))
+
   <!--
   collectionList (list)XXX
   list
   renderBeforeList
   highlightRecords
   listClassName
-  allowOrdering
   -->
-
-<!-- TODO .. overriding a schema like users masalan + hideFromUi option -->
 
 ```javascript
 import React from "react";
@@ -565,6 +566,24 @@ if(Meteor.isClient){
 
 addListColumns({name: 'posts', columns: myColumns })
 ```
+
+### <a name="draggable_rows">How to make rows draggable ?</a>
+
+To enable list rows ordering, all you have to do is:
+
+1. add prop `allowOrdering={true}` to the `<ListDefaultView .../>` component
+2. add order field to the [collection schema](#collection_creation)
+3. add before insert hook to fill incremental order value starting from 0
+4. make sure the order field is always published in [pagination info](#lists_pagination) 
+```javascript
+// ...
+ fields:{
+  //  ...
+   order:1
+  //  ...
+ }
+//  ...
+ ```
 
 ### <a name="lists_pagination">How to manage lists pagination ?</a>
 
